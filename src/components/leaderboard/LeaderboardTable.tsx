@@ -2,6 +2,7 @@
 
 import { Trophy, Medal, Award } from 'lucide-react';
 import type { LeaderboardEntry } from '@/lib/types';
+import MascotAvatar from '@/components/shared/MascotAvatar';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -84,11 +85,7 @@ export default function LeaderboardTable({ entries, onUserClick }: LeaderboardTa
 
               {/* Name */}
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-full bg-wc-darker border border-wc-border flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-gray-400">
-                    {(profile?.display_name ?? '?').charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name ?? '?'} size="sm" />
                 <span className="text-sm font-medium text-gray-200 truncate">
                   {profile?.display_name ?? 'Usuario'}
                 </span>

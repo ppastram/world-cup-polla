@@ -1,6 +1,7 @@
 'use client';
 
 import { Trophy, Target, Shield, Star, Hash } from 'lucide-react';
+import { SCORING } from '@/lib/constants';
 
 interface AwardsFormProps {
   predictions: Record<string, { player_name?: string; total_goals_guess?: number }>;
@@ -15,6 +16,7 @@ const AWARDS = [
     description: 'Mejor jugador del torneo',
     icon: Trophy,
     type: 'player' as const,
+    points: `${SCORING.GOLDEN_BALL} pts`,
   },
   {
     key: 'golden_boot',
@@ -22,6 +24,7 @@ const AWARDS = [
     description: 'Maximo goleador del torneo',
     icon: Target,
     type: 'player' as const,
+    points: `${SCORING.GOLDEN_BOOT} pts`,
   },
   {
     key: 'golden_glove',
@@ -29,6 +32,7 @@ const AWARDS = [
     description: 'Mejor portero del torneo',
     icon: Shield,
     type: 'player' as const,
+    points: `${SCORING.GOLDEN_GLOVE} pts`,
   },
   {
     key: 'best_young',
@@ -36,6 +40,7 @@ const AWARDS = [
     description: 'Mejor jugador sub-21',
     icon: Star,
     type: 'player' as const,
+    points: `${SCORING.BEST_YOUNG} pts`,
   },
   {
     key: 'total_goals',
@@ -43,6 +48,7 @@ const AWARDS = [
     description: 'Cantidad total de goles en el torneo',
     icon: Hash,
     type: 'number' as const,
+    points: `${SCORING.TOTAL_GOALS_EXACT}/${SCORING.TOTAL_GOALS_WITHIN_3}/${SCORING.TOTAL_GOALS_WITHIN_5} pts`,
   },
 ];
 
@@ -76,7 +82,10 @@ export default function AwardsForm({
                 <Icon className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold text-white">{award.label}</h4>
+                <h4 className="text-sm font-semibold text-white">
+                  {award.label}
+                  <span className="text-xs text-gray-500 font-normal ml-2">· {award.points}</span>
+                </h4>
                 <p className="text-xs text-gray-500 mb-3">{award.description}</p>
 
                 {award.type === 'player' ? (

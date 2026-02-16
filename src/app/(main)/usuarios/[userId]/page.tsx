@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { TOURNAMENT_START, STAGES_LABELS } from '@/lib/constants';
 import MatchCard from '@/components/matches/MatchCard';
 import TeamFlag from '@/components/shared/TeamFlag';
+import MascotAvatar from '@/components/shared/MascotAvatar';
 import type {
   Profile,
   Match,
@@ -101,11 +102,7 @@ export default function UserPredictionsPage() {
     <div className="space-y-6 max-w-3xl mx-auto">
       {/* User Header */}
       <div className="flex items-center gap-4">
-        <div className="w-14 h-14 rounded-full bg-wc-card border-2 border-wc-border flex items-center justify-center">
-          <span className="text-xl font-bold text-gold-400">
-            {(profile?.display_name || '?').charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name || '?'} size="lg" />
         <div>
           <h1 className="text-2xl font-bold text-white">
             {profile?.display_name ?? 'Usuario'}

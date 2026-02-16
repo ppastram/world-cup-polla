@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Trophy,
   ClipboardList,
@@ -15,16 +15,26 @@ import {
   X,
   User,
   CreditCard,
+  BookOpen,
+  UserCheck,
+  ChevronDown,
+  MoreHorizontal,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
+import MascotAvatar from "@/components/shared/MascotAvatar";
 
-const navItems = [
+const mainNavItems = [
   { href: "/predicciones", label: "Predicciones", icon: ClipboardList },
-  { href: "/partidos", label: "Partidos", icon: Calendar },
   { href: "/clasificacion", label: "Clasificación", icon: Trophy },
-  { href: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
   { href: "/usuarios", label: "Participantes", icon: Users },
+  { href: "/reglas", label: "Reglas", icon: BookOpen },
+  { href: "/organizador", label: "Organizador", icon: UserCheck },
+];
+
+const moreNavItems = [
+  { href: "/partidos", label: "Partidos", icon: Calendar },
+  { href: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ];
 
 export default function Navbar() {
@@ -32,6 +42,18 @@ export default function Navbar() {
   const router = useRouter();
   const { user, profile, loading } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -42,6 +64,8 @@ export default function Navbar() {
 
   if (loading) return null;
   if (!user) return null;
+
+  const isMoreActive = moreNavItems.some((item) => pathname.startsWith(item.href));
 
   return (
     <nav className="bg-wc-card border-b border-wc-border sticky top-0 z-50">
@@ -58,7 +82,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
+            {mainNavItems.map((item) => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
               return (
@@ -76,6 +100,45 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* "Más" dropdown */}
+            <div ref={moreRef} className="relative">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  isMoreActive
+                    ? "bg-gold-500/10 text-gold-400"
+                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <MoreHorizontal className="w-4 h-4" />
+                Más
+                <ChevronDown className={`w-3 h-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
+              </button>
+              {moreOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-wc-card border border-wc-border rounded-lg shadow-xl py-1 min-w-[180px] z-50">
+                  {moreNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMoreOpen(false)}
+                        className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${
+                          active
+                            ? "bg-gold-500/10 text-gold-400"
+                            : "text-gray-400 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* User Menu */}
@@ -92,7 +155,7 @@ export default function Navbar() {
               href="/perfil"
               className="text-gray-400 hover:text-white px-3 py-2 rounded-lg text-sm hover:bg-white/5 transition-colors flex items-center gap-2"
             >
-              <User className="w-4 h-4" />
+              <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name || ''} size="sm" />
               <span className="max-w-[120px] truncate">
                 {profile?.display_name || "Perfil"}
               </span>
@@ -119,7 +182,7 @@ export default function Navbar() {
       {mobileOpen && (
         <div className="md:hidden border-t border-wc-border bg-wc-card">
           <div className="px-4 py-3 space-y-1">
-            {navItems.map((item) => {
+            {[...mainNavItems, ...moreNavItems].map((item) => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
               return (

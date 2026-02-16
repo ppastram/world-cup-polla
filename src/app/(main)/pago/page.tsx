@@ -65,7 +65,10 @@ export default function PagoPage() {
         .from('payment-proofs')
         .upload(filePath, file, { upsert: true });
 
-      if (uploadErr) throw uploadErr;
+      if (uploadErr) {
+        console.error('Storage upload error:', uploadErr);
+        throw new Error(`Error subiendo archivo: ${uploadErr.message}`);
+      }
 
       const { data: urlData } = supabase.storage
         .from('payment-proofs')
@@ -80,7 +83,10 @@ export default function PagoPage() {
         })
         .eq('id', user.id);
 
-      if (updateErr) throw updateErr;
+      if (updateErr) {
+        console.error('Profile update error:', updateErr);
+        throw new Error(`Error actualizando perfil: ${updateErr.message}`);
+      }
 
       setPaymentStatus('uploaded');
       setProofUrl(urlData.publicUrl);

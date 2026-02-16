@@ -4,11 +4,14 @@ import { useEffect, useState } from 'react';
 import { User, Mail, CheckCircle, Clock, AlertTriangle, Save, Loader2, Target } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import MascotAvatar from '@/components/shared/MascotAvatar';
+import MascotSelector from '@/components/shared/MascotSelector';
 import Link from 'next/link';
 
 export default function PerfilPage() {
   const { user, profile, loading: userLoading } = useUser();
   const [displayName, setDisplayName] = useState('');
+  const [selectedMascot, setSelectedMascot] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [predictionStats, setPredictionStats] = useState({
@@ -21,6 +24,7 @@ export default function PerfilPage() {
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name);
+      setSelectedMascot(profile.avatar_url);
     }
   }, [profile]);
 
@@ -66,7 +70,7 @@ export default function PerfilPage() {
     const supabase = createClient();
     await supabase
       .from('profiles')
-      .update({ display_name: displayName.trim() })
+      .update({ display_name: displayName.trim(), avatar_url: selectedMascot })
       .eq('id', user.id);
     setSaving(false);
     setSaved(true);
@@ -123,11 +127,7 @@ export default function PerfilPage() {
       {/* Avatar + Name */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-wc-darker border-2 border-blue-500/30 flex items-center justify-center">
-            <span className="text-2xl font-bold text-gold-400">
-              {(profile.display_name || '?').charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <MascotAvatar avatarUrl={selectedMascot} displayName={profile.display_name} size="lg" />
           <div>
             <p className="text-lg font-bold text-white">{profile.display_name}</p>
             <p className="text-sm text-gray-500">{user.email}</p>
@@ -163,6 +163,14 @@ export default function PerfilPage() {
               {saved ? 'Guardado' : 'Guardar'}
             </button>
           </div>
+        </div>
+
+        {/* Mascot Selection */}
+        <div className="mt-4">
+          <label className="text-xs text-gray-500 uppercase tracking-wider block mb-3">
+            Avatar (mascota mundialista)
+          </label>
+          <MascotSelector selected={selectedMascot} onSelect={setSelectedMascot} />
         </div>
 
         {/* Email (read-only) */}

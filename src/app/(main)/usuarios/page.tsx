@@ -5,6 +5,7 @@ import { Users, CheckCircle, Clock, AlertTriangle, Loader2, ChevronRight } from 
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';
+import MascotAvatar from '@/components/shared/MascotAvatar';
 
 const statusConfig: Record<string, { label: string; icon: React.ElementType; badgeClass: string }> = {
   verified: {
@@ -102,11 +103,7 @@ export default function UsuariosPage() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-wc-darker border border-wc-border flex items-center justify-center shrink-0">
-                      <span className="text-sm font-bold text-gray-400">
-                        {(p.display_name || '?').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <MascotAvatar avatarUrl={p.avatar_url} displayName={p.display_name || '?'} size="md" />
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-200 truncate">
                         {p.display_name}

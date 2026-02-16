@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { PREDICTION_DEADLINE } from '@/lib/constants';
+import { calculateGroupStandings } from '@/lib/group-standings';
 import type { Team, Match, AwardType } from '@/lib/types';
 
 import CountdownTimer from '@/components/shared/CountdownTimer';
@@ -20,7 +21,6 @@ const GROUP_STEPS: string[][] = [
   ['I', 'J', 'K', 'L'],
 ];
 
-const ADVANCING_ROUNDS = ['round_32', 'round_16', 'quarter', 'semi', 'final', 'champion'] as const;
 
 export default function PrediccionesPage() {
   const { user, profile, loading: userLoading } = useUser();
@@ -136,6 +136,47 @@ export default function PrediccionesPage() {
     []
   );
 
+  // Auto-compute round_32 from group predictions
+  const autoRound32 = useMemo(() => {
+    if (teams.length === 0 || matches.length === 0) return [];
+    const result = calculateGroupStandings(teams, matches, matchPredictions);
+    return result.allQualified;
+  }, [teams, matches, matchPredictions]);
+
+  // Cascade-invalidate: remove teams from manual rounds if no longer in autoRound32
+  const prevAutoRound32Ref = useRef<string[]>([]);
+  useEffect(() => {
+    const prev = prevAutoRound32Ref.current;
+    if (prev.length === 0 && autoRound32.length > 0) {
+      prevAutoRound32Ref.current = autoRound32;
+      return;
+    }
+    if (prev.length === 0) return;
+
+    const removedTeams = prev.filter((id) => !autoRound32.includes(id));
+    if (removedTeams.length === 0) {
+      prevAutoRound32Ref.current = autoRound32;
+      return;
+    }
+
+    // Remove teams that are no longer qualified from all manual rounds
+    const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'champion'] as const;
+    setAdvancingPredictions((current) => {
+      const updated = { ...current };
+      let changed = false;
+      for (const round of manualRounds) {
+        const roundTeams = updated[round] || [];
+        const filtered = roundTeams.filter((id) => !removedTeams.includes(id));
+        if (filtered.length !== roundTeams.length) {
+          updated[round] = filtered;
+          changed = true;
+        }
+      }
+      return changed ? updated : current;
+    });
+    prevAutoRound32Ref.current = autoRound32;
+  }, [autoRound32]);
+
   // Save current step
   const handleSave = useCallback(async () => {
     if (!user || isPastDeadline) return;
@@ -172,7 +213,13 @@ export default function PrediccionesPage() {
           .eq('user_id', user.id);
 
         const inserts: { user_id: string; team_id: string; round: string }[] = [];
-        for (const round of ADVANCING_ROUNDS) {
+        // Auto-insert round_32 from computation
+        for (const teamId of autoRound32) {
+          inserts.push({ user_id: user.id, team_id: teamId, round: 'round_32' });
+        }
+        // Manual rounds
+        const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'champion'] as const;
+        for (const round of manualRounds) {
           const teamIds = advancingPredictions[round] || [];
           for (const teamId of teamIds) {
             inserts.push({ user_id: user.id, team_id: teamId, round });
@@ -220,17 +267,18 @@ export default function PrediccionesPage() {
     } finally {
       setSaving(false);
     }
-  }, [user, currentStep, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase]);
+  }, [user, currentStep, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32]);
 
   // Completion stats
   const groupMatchCount = matches.filter(
     (m) => m.stage === 'group' && m.home_team && m.away_team
   ).length;
   const predictedMatchCount = Object.keys(matchPredictions).length;
-  const advancingCount = Object.values(advancingPredictions).reduce(
-    (sum, ids) => sum + ids.length,
+  const manualAdvancingCount = ['round_16', 'quarter', 'semi', 'final', 'champion'].reduce(
+    (sum, round) => sum + (advancingPredictions[round]?.length || 0),
     0
   );
+  const advancingCount = autoRound32.length + manualAdvancingCount;
   const totalAdvancingExpected = 32 + 16 + 8 + 4 + 2 + 1; // 63
   const filledAwards = Object.values(awardPredictions).filter(
     (v) => v.player_name?.trim() || v.total_goals_guess != null
@@ -358,6 +406,7 @@ export default function PrediccionesPage() {
           <GroupStageForm
             groups={GROUP_STEPS[currentStep]}
             matches={matches}
+            teams={teams}
             predictions={matchPredictions}
             onPredictionChange={handleMatchPredictionChange}
             disabled={isPastDeadline}
@@ -370,6 +419,7 @@ export default function PrediccionesPage() {
             predictions={advancingPredictions}
             onChange={handleAdvancingChange}
             disabled={isPastDeadline}
+            autoRound32={autoRound32}
           />
         )}
 

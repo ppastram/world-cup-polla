@@ -1,11 +1,16 @@
 'use client';
 
+import { useMemo } from 'react';
 import type { Match, Team } from '@/lib/types';
+import { SCORING } from '@/lib/constants';
+import { calculateGroupStandings } from '@/lib/group-standings';
 import MatchScoreInput from './MatchScoreInput';
+import PredictedStandings from './PredictedStandings';
 
 interface GroupStageFormProps {
   groups: string[];
   matches: Match[];
+  teams: Team[];
   predictions: Record<string, { home: number; away: number }>;
   onPredictionChange: (matchId: string, home: number, away: number) => void;
   disabled?: boolean;
@@ -14,6 +19,7 @@ interface GroupStageFormProps {
 export default function GroupStageForm({
   groups,
   matches,
+  teams,
   predictions,
   onPredictionChange,
   disabled = false,
@@ -24,6 +30,12 @@ export default function GroupStageForm({
       .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime());
     return acc;
   }, {});
+
+  const groupStandings = useMemo(() => {
+    const groupTeams = teams.filter((t) => groups.includes(t.group_letter));
+    const groupMatches = matches.filter((m) => groups.includes(m.group_letter || ''));
+    return calculateGroupStandings(groupTeams, groupMatches, predictions);
+  }, [teams, matches, groups, predictions]);
 
   return (
     <div className="space-y-8">
@@ -43,6 +55,9 @@ export default function GroupStageForm({
                 {predictedCount}/{groupMatches.length} predichos
               </span>
             </div>
+            <p className="text-xs text-gray-600 mb-2">
+              {SCORING.EXACT_SCORE} pts exacto · {SCORING.CORRECT_RESULT_AND_DIFF} pts resultado+dif · {SCORING.CORRECT_RESULT} pts resultado
+            </p>
             <div className="space-y-2">
               {groupMatches.map((match) => {
                 const prediction = predictions[match.id];
@@ -58,6 +73,9 @@ export default function GroupStageForm({
                 );
               })}
             </div>
+            {groupStandings.standings[group] && (
+              <PredictedStandings standings={groupStandings.standings[group]} />
+            )}
           </div>
         );
       })}
