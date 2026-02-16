@@ -12,9 +12,9 @@ function getRankStyle(rank: number) {
   switch (rank) {
     case 1:
       return {
-        bg: 'bg-gold-500/10 border-gold-500/30',
-        text: 'text-gold-400',
-        icon: <Trophy className="w-5 h-5 text-gold-400" />,
+        bg: 'bg-yellow-500/10 border-yellow-500/30',
+        text: 'text-yellow-400',
+        icon: <Trophy className="w-5 h-5 text-yellow-400" />,
       };
     case 2:
       return {

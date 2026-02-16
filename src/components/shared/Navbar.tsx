@@ -52,7 +52,7 @@ export default function Navbar() {
             href="/predicciones"
             className="flex items-center gap-2 text-gold-400 font-bold text-lg"
           >
-            <Trophy className="w-6 h-6" />
+            <img src="/wc-logo-minimalist.jpeg" alt="WC 2026" className="w-8 h-8 rounded-sm" />
             <span className="hidden sm:inline">Polla Mundialista</span>
           </Link>
 

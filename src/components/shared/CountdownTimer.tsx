@@ -73,7 +73,7 @@ export default function CountdownTimer({ targetDate, label }: CountdownTimerProp
               </span>
             </div>
             {i < units.length - 1 && (
-              <span className="text-gold-400/50 font-bold text-lg mb-4">:</span>
+              <span className="text-blue-400/50 font-bold text-lg mb-4">:</span>
             )}
           </div>
         ))}

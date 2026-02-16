@@ -182,12 +182,12 @@ export default function ReglasPage() {
           Distribucion de Premios
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gold-500/10 rounded-lg border border-gold-500/20">
+          <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
             <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-gold-400" />
-              <span className="text-sm font-semibold text-gold-400">1er Lugar</span>
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              <span className="text-sm font-semibold text-yellow-400">1er Lugar</span>
             </div>
-            <span className="text-sm font-bold text-gold-400">70% del pozo</span>
+            <span className="text-sm font-bold text-yellow-400">70% del pozo</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-gray-400/5 rounded-lg border border-gray-400/20">
             <div className="flex items-center gap-2">

@@ -157,7 +157,7 @@ export default function PagoPage() {
           </label>
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
-              <span className="text-lg font-mono font-bold text-gold-400 tracking-wider">
+              <span className="text-lg font-mono font-bold text-blue-400 tracking-wider">
                 {NEQUI_NUMBER}
               </span>
             </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Trophy, Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -45,9 +45,9 @@ export default function LoginPage() {
     <div className="min-h-screen bg-wc-darker flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-gold-400">
-            <Trophy className="w-8 h-8" />
-            <span className="text-2xl font-bold">Polla Mundialista</span>
+          <Link href="/" className="inline-flex flex-col items-center gap-3">
+            <img src="/wc-logo-blue-and-green.jpeg" alt="WC 2026" className="h-20 drop-shadow-lg" />
+            <span className="text-2xl font-bold text-gold-400">Polla Mundialista</span>
           </Link>
         </div>
 

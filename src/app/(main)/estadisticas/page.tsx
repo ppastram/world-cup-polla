@@ -213,7 +213,7 @@ export default function EstadisticasPage() {
             <TrendingUp className="w-5 h-5 text-gold-400" />
             Prediccion promedio de goles totales
           </h2>
-          <p className="text-4xl font-extrabold text-gold-400">{avgTotalGoals}</p>
+          <p className="text-4xl font-extrabold text-yellow-400">{avgTotalGoals}</p>
           <p className="text-sm text-gray-500 mt-1">goles en todo el torneo</p>
         </div>
       )}

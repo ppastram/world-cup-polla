@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, FileText, CreditCard, Users, Settings, Trophy } from "lucide-react";
+import { Shield, FileText, CreditCard, Users, Settings } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const adminNav = [
@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/predicciones" className="flex items-center gap-2 text-gold-400 font-bold">
-                <Trophy className="w-5 h-5" />
+                <img src="/wc-logo-minimalist.jpeg" alt="WC 2026" className="w-7 h-7 rounded-sm" />
                 <span className="hidden sm:inline">Polla Mundialista</span>
               </Link>
               <div className="flex items-center gap-1 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-semibold">

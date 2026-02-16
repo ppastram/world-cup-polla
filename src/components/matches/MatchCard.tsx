@@ -78,7 +78,7 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
               </span>
             </>
           ) : (
-            <span className="text-lg font-bold text-gold-400 px-3">vs</span>
+            <span className="text-lg font-bold text-blue-400 px-3">vs</span>
           )}
         </div>
 

@@ -82,7 +82,7 @@ export default function ClasificacionPage() {
           <DollarSign className="w-5 h-5 text-gold-400" />
           <h2 className="text-lg font-bold text-white">Pozo Acumulado</h2>
         </div>
-        <p className="text-4xl md:text-5xl font-extrabold text-gold-400 text-center mb-1">
+        <p className="text-4xl md:text-5xl font-extrabold text-center mb-1 bg-gradient-to-r from-yellow-300 to-green-400 bg-clip-text text-transparent">
           ${prizes.totalPool.toLocaleString('es-CO')}
         </p>
         <p className="text-gray-500 text-center text-sm mb-5">
@@ -90,7 +90,7 @@ export default function ClasificacionPage() {
         </p>
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-wc-darker rounded-lg p-3">
-            <p className="text-gold-400 font-bold text-lg">
+            <p className="text-yellow-400 font-bold text-lg">
               ${prizes.firstPlace.toLocaleString('es-CO')}
             </p>
             <p className="text-gray-500 text-xs">1er Lugar (70%)</p>

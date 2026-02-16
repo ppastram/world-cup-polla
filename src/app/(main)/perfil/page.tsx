@@ -123,7 +123,7 @@ export default function PerfilPage() {
       {/* Avatar + Name */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-wc-darker border-2 border-gold-500/30 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-wc-darker border-2 border-blue-500/30 flex items-center justify-center">
             <span className="text-2xl font-bold text-gold-400">
               {(profile.display_name || '?').charAt(0).toUpperCase()}
             </span>

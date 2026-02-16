@@ -36,7 +36,7 @@ function CountdownTimer() {
       ].map((item) => (
         <div key={item.label} className="text-center">
           <div className="bg-wc-card border border-wc-border rounded-xl w-20 h-20 flex items-center justify-center">
-            <span className="text-3xl font-bold text-gold-400">
+            <span className="text-3xl font-bold text-yellow-300">
               {String(item.value).padStart(2, "0")}
             </span>
           </div>
@@ -69,7 +69,7 @@ function PrizePoolDisplay() {
         <DollarSign className="w-6 h-6 text-gold-400" />
         <h2 className="text-2xl font-bold text-white">Pozo Acumulado</h2>
       </div>
-      <p className="text-5xl font-extrabold text-gradient-gold text-center mb-2">
+      <p className="text-5xl font-extrabold text-center mb-2 bg-gradient-to-r from-yellow-300 to-green-400 bg-clip-text text-transparent">
         ${prizes.totalPool.toLocaleString("es-CO")}
       </p>
       <p className="text-gray-500 text-center text-sm mb-6">
@@ -77,7 +77,7 @@ function PrizePoolDisplay() {
       </p>
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
-          <p className="text-gold-400 font-bold text-lg">
+          <p className="text-yellow-400 font-bold text-lg">
             ${prizes.firstPlace.toLocaleString("es-CO")}
           </p>
           <p className="text-gray-500 text-xs">1er Lugar (70%)</p>
@@ -106,11 +106,18 @@ export default function LandingPage() {
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold-500/5 via-transparent to-transparent" />
         <div className="max-w-4xl mx-auto px-4 pt-20 pb-16 text-center relative">
-          <Trophy className="w-16 h-16 text-gold-400 mx-auto mb-4" />
+          <img
+            src="/wc-logo-blue-and-green.jpeg"
+            alt="FIFA World Cup 2026"
+            className="mx-auto h-32 md:h-40 mb-6 drop-shadow-2xl"
+          />
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4">
             <span className="text-gradient-gold">Polla</span>{" "}
             <span className="text-white">Mundialista</span>
           </h1>
+          <div className="flex items-center justify-center gap-3 text-2xl mb-2">
+            <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
+          </div>
           <p className="text-xl text-gray-400 mb-2">FIFA World Cup 2026</p>
           <p className="text-gray-500 mb-10 max-w-lg mx-auto">
             Predice los resultados, elige al campeón y compite con tus amigos
@@ -189,36 +196,36 @@ export default function LandingPage() {
           </h2>
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-gold-400 font-semibold mb-3">Partidos</h3>
+              <h3 className="text-blue-400 font-semibold mb-3">Partidos</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex justify-between">
                   <span>Marcador exacto</span>
-                  <span className="text-gold-300 font-bold">5 pts</span>
+                  <span className="text-yellow-300 font-bold">5 pts</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Resultado + diferencia</span>
-                  <span className="text-gold-300 font-bold">3 pts</span>
+                  <span className="text-yellow-300 font-bold">3 pts</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Resultado correcto</span>
-                  <span className="text-gold-300 font-bold">2 pts</span>
+                  <span className="text-yellow-300 font-bold">2 pts</span>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-gold-400 font-semibold mb-3">Clasificados</h3>
+              <h3 className="text-blue-400 font-semibold mb-3">Clasificados</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex justify-between">
                   <span>Campeón</span>
-                  <span className="text-gold-300 font-bold">20 pts</span>
+                  <span className="text-yellow-300 font-bold">20 pts</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Finalistas</span>
-                  <span className="text-gold-300 font-bold">12 pts</span>
+                  <span className="text-yellow-300 font-bold">12 pts</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Semifinalistas</span>
-                  <span className="text-gold-300 font-bold">8 pts</span>
+                  <span className="text-yellow-300 font-bold">8 pts</span>
                 </li>
               </ul>
             </div>
@@ -226,8 +233,12 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <footer className="border-t border-wc-border py-8 text-center text-gray-600 text-sm">
-        <p>Polla Mundialista 2026 - Hecho con pasión futbolera</p>
+      <footer className="border-t border-wc-border py-8 text-center">
+        <img src="/wc-logo-minimalist.jpeg" alt="FIFA World Cup 2026" className="mx-auto h-16 mb-3 opacity-60" />
+        <div className="flex items-center justify-center gap-4 text-xl mb-2">
+          <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
+        </div>
+        <p className="text-gray-600 text-sm">Polla Mundialista 2026 — México · United States · Canada</p>
       </footer>
     </div>
   );
