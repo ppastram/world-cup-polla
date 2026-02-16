@@ -58,7 +58,7 @@ export const PRIZE_POOL = {
   third_place_return: true, // gets entry fee back
 };
 
-export const NEQUI_NUMBER = "3163235264";
+export const NEQUI_NUMBER = process.env.NEXT_PUBLIC_NEQUI_NUMBER || "";
 
 /**
  * Calculate prize amounts based on number of paid participants.
