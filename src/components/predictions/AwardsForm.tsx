@@ -1,10 +1,10 @@
 'use client';
 
-import { Trophy, Target, Shield, Star, Hash } from 'lucide-react';
+import { Trophy, Target, Shield, Star, Hash, CheckCircle2, XCircle } from 'lucide-react';
 import { SCORING } from '@/lib/constants';
 
 interface AwardsFormProps {
-  predictions: Record<string, { player_name?: string; total_goals_guess?: number }>;
+  predictions: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>;
   onChange: (awardType: string, value: { player_name?: string; total_goals_guess?: number }) => void;
   disabled?: boolean;
 }
@@ -65,6 +65,9 @@ export default function AwardsForm({
         const isFilled = award.type === 'player'
           ? !!prediction.player_name?.trim()
           : prediction.total_goals_guess != null;
+        const hasBeenScored = prediction.points_earned != null;
+        const earnedPoints = prediction.points_earned ?? 0;
+        const isCorrect = hasBeenScored && earnedPoints > 0;
 
         return (
           <div
@@ -114,6 +117,24 @@ export default function AwardsForm({
                     max={500}
                     className="w-full bg-wc-darker border border-wc-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/60 focus:ring-1 focus:ring-gold-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   />
+                )}
+
+                {hasBeenScored && (
+                  <div className={`flex items-center gap-2 mt-2 text-sm font-medium ${
+                    isCorrect ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {isCorrect ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>+{earnedPoints} pts</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-4 h-4" />
+                        <span>0 pts</span>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

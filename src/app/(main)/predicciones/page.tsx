@@ -36,7 +36,7 @@ export default function PrediccionesPage() {
   // Predictions state
   const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number; pointsEarned?: number | null }>>({});
   const [advancingPredictions, setAdvancingPredictions] = useState<Record<string, string[]>>({});
-  const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number }>>({});
+  const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>>({});
 
   const isPastDeadline = new Date() > PREDICTION_DEADLINE;
   const totalSteps = 5;
@@ -104,11 +104,12 @@ export default function PrediccionesPage() {
 
       // Build award predictions map
       if (awardPreds) {
-        const map: Record<string, { player_name?: string; total_goals_guess?: number }> = {};
+        const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }> = {};
         for (const p of awardPreds) {
           map[p.award_type] = {
             player_name: p.player_name || undefined,
             total_goals_guess: p.total_goals_guess ?? undefined,
+            points_earned: p.points_earned,
           };
         }
         setAwardPredictions(map);

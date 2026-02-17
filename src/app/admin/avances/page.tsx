@@ -139,7 +139,8 @@ export default function AdminAvancesPage() {
 
     try {
       // Delete all existing
-      await supabase.from("actual_advancing").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error: delError } = await supabase.from("actual_advancing").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (delError) throw delError;
 
       // Build inserts
       const inserts: { team_id: string; round: string }[] = [];
@@ -156,12 +157,14 @@ export default function AdminAvancesPage() {
       }
 
       // Score predictions and recalculate leaderboard
-      await supabase.rpc("score_advancing_predictions");
-      await supabase.rpc("recalculate_leaderboard");
+      const { error: scoreError } = await supabase.rpc("score_advancing_predictions");
+      if (scoreError) throw scoreError;
+      const { error: lbError } = await supabase.rpc("recalculate_leaderboard");
+      if (lbError) throw lbError;
 
       setSaveMessage("Avances guardados y puntos recalculados");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
+      const message = err instanceof Error ? err.message : (typeof err === 'object' && err !== null && 'message' in err) ? String((err as { message: unknown }).message) : JSON.stringify(err);
       setSaveMessage(`Error: ${message}`);
     }
 
@@ -186,18 +189,21 @@ export default function AdminAvancesPage() {
       });
 
       // Delete all existing then insert (simpler than upsert with potential missing rows)
-      await supabase.from("actual_awards").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error: delError } = await supabase.from("actual_awards").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      if (delError) throw delError;
 
       const { error } = await supabase.from("actual_awards").insert(upserts);
       if (error) throw error;
 
       // Score predictions and recalculate leaderboard
-      await supabase.rpc("score_award_predictions");
-      await supabase.rpc("recalculate_leaderboard");
+      const { error: scoreError } = await supabase.rpc("score_award_predictions");
+      if (scoreError) throw scoreError;
+      const { error: lbError } = await supabase.rpc("recalculate_leaderboard");
+      if (lbError) throw lbError;
 
       setSaveMessage("Premios guardados y puntos recalculados");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
+      const message = err instanceof Error ? err.message : (typeof err === 'object' && err !== null && 'message' in err) ? String((err as { message: unknown }).message) : JSON.stringify(err);
       setSaveMessage(`Error: ${message}`);
     }
 
