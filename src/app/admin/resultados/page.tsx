@@ -12,6 +12,8 @@ export default function AdminResultadosPage() {
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [savingAll, setSavingAll] = useState(false);
+  const [saveAllMessage, setSaveAllMessage] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState("group");
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>({});
 
@@ -122,6 +124,84 @@ export default function AdminResultadosPage() {
     } catch {
       alert("Error al sincronizar");
     }
+  }
+
+  async function saveAllResults() {
+    const matchesToSave = filteredMatches.filter((m) => {
+      const score = scores[m.id];
+      return score && score.home !== "" && score.away !== "";
+    });
+
+    if (matchesToSave.length === 0) return;
+
+    setSavingAll(true);
+    setSaveAllMessage(null);
+    const supabase = createClient();
+    let saved = 0;
+
+    try {
+      for (const match of matchesToSave) {
+        const score = scores[match.id];
+        const homeScore = parseInt(score.home);
+        const awayScore = parseInt(score.away);
+
+        const { error: matchError } = await supabase
+          .from("matches")
+          .update({
+            home_score: homeScore,
+            away_score: awayScore,
+            status: "finished",
+            manual_override: true,
+          })
+          .eq("id", match.id);
+
+        if (matchError) {
+          setSaveAllMessage(`Error en partido #${match.match_number}: ${matchError.message}`);
+          break;
+        }
+
+        // Recalculate points for all predictions on this match
+        const { data: predictions } = await supabase
+          .from("match_predictions")
+          .select("*")
+          .eq("match_id", match.id);
+
+        if (predictions) {
+          for (const pred of predictions) {
+            let points = 0;
+            if (pred.home_score === homeScore && pred.away_score === awayScore) {
+              points = 5;
+            } else {
+              const predDiff = pred.home_score - pred.away_score;
+              const actualDiff = homeScore - awayScore;
+              const predResult = Math.sign(predDiff);
+              const actualResult = Math.sign(actualDiff);
+              if (predResult === actualResult) {
+                points = predDiff === actualDiff ? 3 : 2;
+              }
+            }
+            await supabase
+              .from("match_predictions")
+              .update({ points_earned: points })
+              .eq("id", pred.id);
+          }
+        }
+        saved++;
+      }
+
+      await supabase.rpc("recalculate_leaderboard");
+
+      if (!saveAllMessage) {
+        setSaveAllMessage(`${saved} partido${saved !== 1 ? 's' : ''} guardado${saved !== 1 ? 's' : ''} exitosamente`);
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      setSaveAllMessage(`Error: ${message}`);
+    }
+
+    setSavingAll(false);
+    setTimeout(() => setSaveAllMessage(null), 4000);
+    fetchMatches();
   }
 
   const filteredMatches = matches.filter((m) => m.stage === stageFilter);
@@ -259,6 +339,40 @@ export default function AdminResultadosPage() {
           <p className="text-center text-gray-500 py-10">No hay partidos en esta fase</p>
         )}
       </div>
+
+      {/* Save All Message */}
+      {saveAllMessage && (
+        <div
+          className={`mt-4 text-center text-sm py-2 px-4 rounded-lg ${
+            saveAllMessage.includes("Error")
+              ? "bg-red-900/30 text-red-300 border border-red-700/50"
+              : "bg-emerald-900/30 text-emerald-300 border border-emerald-700/50"
+          }`}
+        >
+          <div className="flex items-center justify-center gap-2">
+            {!saveAllMessage.includes("Error") && <CheckCircle className="w-4 h-4" />}
+            {saveAllMessage}
+          </div>
+        </div>
+      )}
+
+      {/* Save All Button */}
+      {filteredMatches.length > 0 && (
+        <button
+          onClick={saveAllResults}
+          disabled={savingAll}
+          className="mt-4 w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-bold transition-colors disabled:opacity-50"
+        >
+          {savingAll ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              Guardar Todos los Resultados
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }

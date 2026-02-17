@@ -118,11 +118,7 @@ export default function LandingPage() {
           <div className="flex items-center justify-center gap-3 text-2xl mb-2">
             <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
           </div>
-          <p className="text-xl text-gray-400 mb-2">FIFA World Cup 2026</p>
-          <p className="text-gray-500 mb-10 max-w-lg mx-auto">
-            Predice los resultados, elige al campeón y compite con tus amigos
-            por el premio mayor.
-          </p>
+          <p className="text-xl text-gray-400 mb-2">La polla que duele perder.</p>
 
           <div className="mb-10">
             <p className="text-sm text-gray-500 mb-4">El Mundial comienza en</p>

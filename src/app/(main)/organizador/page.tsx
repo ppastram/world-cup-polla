@@ -100,15 +100,19 @@ export default function OrganizadorPage() {
           />
           <div>
             <p className="text-lg font-bold text-white">Pablo Pastrana</p>
-            <p className="text-sm text-gray-500">Organizador oficial</p>
+            <p className="text-sm text-gray-500">Organizador</p>
           </div>
         </div>
 
         <p className="text-sm text-gray-400 leading-relaxed">
-          Soy el organizador de esta ampolla mundialista. Me encargo de administrar los pagos,
-          verificar las inscripciones y asegurar que todo funcione correctamente. Si tienes
-          alguna duda sobre tu inscripcion, el pago o cualquier aspecto de la polla, no dudes
-          en contactarme.
+          Soy Pablo y quise organizar esta ampolla para ponerle emoción al mundial con amigos y familia.
+          Le metí amor a hacer una página linda y fácil de usar para que sea bacano seguir la polla y podamos
+          hacer fuerza a favor de nuestras apuestas (y en contra las de los demás!) en tiempo real (y porque tocaba poner
+          en práctica la carrera...).
+          <br/> <br/>
+          Inviten a amigos, vecinos, familiares, vecinos, novias, mozas, etc para que el premio crezca. Les dejo mi
+          teléfono y correo para que me cuenten si tienen cualquier queja, sugerencia, reclamo. Estaré administrando
+          también los pagos y asegurando que todo funcione correctamente.
         </p>
 
         {/* Contact Info */}

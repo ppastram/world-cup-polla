@@ -112,11 +112,19 @@ export default function MatchScoreInput({
           <ScoreButton onClick={() => handleChange('home', -1)} disabled={isDisabled || currentHome <= 0}>
             <Minus className="w-3.5 h-3.5" />
           </ScoreButton>
-          <div className="w-9 h-9 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border">
-            <span className={`text-base font-bold tabular-nums ${isPredicted ? 'text-gold-400' : 'text-gray-500'}`}>
-              {homeScore !== null ? homeScore : '-'}
-            </span>
-          </div>
+          <input
+            type="number"
+            min="0"
+            max="20"
+            value={homeScore !== null ? homeScore : ''}
+            onChange={(e) => {
+              if (isDisabled) return;
+              const val = e.target.value === '' ? 0 : Math.max(0, Math.min(20, parseInt(e.target.value) || 0));
+              onChange(val, currentAway);
+            }}
+            disabled={isDisabled}
+            className={`w-9 h-9 text-center rounded-md bg-wc-darker border border-wc-border text-base font-bold tabular-nums focus:outline-none focus:border-gold-500/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isPredicted ? 'text-gold-400' : 'text-gray-500'}`}
+          />
           <ScoreButton onClick={() => handleChange('home', 1)} disabled={isDisabled || currentHome >= 20}>
             <Plus className="w-3.5 h-3.5" />
           </ScoreButton>
@@ -126,11 +134,19 @@ export default function MatchScoreInput({
           <ScoreButton onClick={() => handleChange('away', -1)} disabled={isDisabled || currentAway <= 0}>
             <Minus className="w-3.5 h-3.5" />
           </ScoreButton>
-          <div className="w-9 h-9 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border">
-            <span className={`text-base font-bold tabular-nums ${isPredicted ? 'text-gold-400' : 'text-gray-500'}`}>
-              {awayScore !== null ? awayScore : '-'}
-            </span>
-          </div>
+          <input
+            type="number"
+            min="0"
+            max="20"
+            value={awayScore !== null ? awayScore : ''}
+            onChange={(e) => {
+              if (isDisabled) return;
+              const val = e.target.value === '' ? 0 : Math.max(0, Math.min(20, parseInt(e.target.value) || 0));
+              onChange(currentHome, val);
+            }}
+            disabled={isDisabled}
+            className={`w-9 h-9 text-center rounded-md bg-wc-darker border border-wc-border text-base font-bold tabular-nums focus:outline-none focus:border-gold-500/50 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isPredicted ? 'text-gold-400' : 'text-gray-500'}`}
+          />
           <ScoreButton onClick={() => handleChange('away', 1)} disabled={isDisabled || currentAway >= 20}>
             <Plus className="w-3.5 h-3.5" />
           </ScoreButton>

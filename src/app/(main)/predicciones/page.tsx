@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { PREDICTION_DEADLINE } from '@/lib/constants';
@@ -144,39 +144,6 @@ export default function PrediccionesPage() {
     return result.allQualified;
   }, [teams, matches, matchPredictions]);
 
-  // Cascade-invalidate: remove teams from manual rounds if no longer in autoRound32
-  const prevAutoRound32Ref = useRef<string[]>([]);
-  useEffect(() => {
-    const prev = prevAutoRound32Ref.current;
-    if (prev.length === 0 && autoRound32.length > 0) {
-      prevAutoRound32Ref.current = autoRound32;
-      return;
-    }
-    if (prev.length === 0) return;
-
-    const removedTeams = prev.filter((id) => !autoRound32.includes(id));
-    if (removedTeams.length === 0) {
-      prevAutoRound32Ref.current = autoRound32;
-      return;
-    }
-
-    // Remove teams that are no longer qualified from all manual rounds
-    const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'] as const;
-    setAdvancingPredictions((current) => {
-      const updated = { ...current };
-      let changed = false;
-      for (const round of manualRounds) {
-        const roundTeams = updated[round] || [];
-        const filtered = roundTeams.filter((id) => !removedTeams.includes(id));
-        if (filtered.length !== roundTeams.length) {
-          updated[round] = filtered;
-          changed = true;
-        }
-      }
-      return changed ? updated : current;
-    });
-    prevAutoRound32Ref.current = autoRound32;
-  }, [autoRound32]);
 
   // Save current step
   const handleSave = useCallback(async () => {
@@ -206,8 +173,14 @@ export default function PrediccionesPage() {
           if (error) throw error;
         }
       } else if (currentStep === 3) {
-        // Save advancing predictions using UPSERT + selective cleanup
-        // Build full set of (user_id, team_id, round) tuples to keep
+        // Safety guard: refuse to save if state looks incomplete
+        if (autoRound32.length === 0) {
+          setSaveMessage('Error: No se detectaron equipos clasificados. Recarga la página e intenta de nuevo.');
+          setSaving(false);
+          return;
+        }
+
+        // Save advancing predictions (upsert-only, never delete)
         const upserts: { user_id: string; team_id: string; round: string }[] = [];
         // Auto-insert round_32 from computation
         for (const teamId of autoRound32) {
@@ -222,35 +195,12 @@ export default function PrediccionesPage() {
           }
         }
 
-        // Upsert all current predictions
+        // Upsert all current predictions (never delete existing ones)
         if (upserts.length > 0) {
           const { error } = await supabase
             .from('advancing_predictions')
             .upsert(upserts, { onConflict: 'user_id,team_id,round' });
           if (error) throw error;
-        }
-
-        // Build set of team_id+round keys to keep
-        const keepKeys = new Set(upserts.map((u) => `${u.team_id}|${u.round}`));
-
-        // Fetch existing rows and delete only stale ones
-        const { data: existing } = await supabase
-          .from('advancing_predictions')
-          .select('id, team_id, round')
-          .eq('user_id', user.id);
-
-        if (existing) {
-          const staleIds = existing
-            .filter((row) => !keepKeys.has(`${row.team_id}|${row.round}`))
-            .map((row) => row.id);
-
-          if (staleIds.length > 0) {
-            const { error: delError } = await supabase
-              .from('advancing_predictions')
-              .delete()
-              .in('id', staleIds);
-            if (delError) throw delError;
-          }
         }
       } else if (currentStep === 4) {
         // Save award predictions

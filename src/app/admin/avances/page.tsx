@@ -138,22 +138,41 @@ export default function AdminAvancesPage() {
     const supabase = createClient();
 
     try {
-      // Delete all existing
-      const { error: delError } = await supabase.from("actual_advancing").delete().gt("created_at", "1970-01-01");
-      if (delError) throw delError;
-
-      // Build inserts
-      const inserts: { team_id: string; round: string }[] = [];
+      // Build upserts from current state
+      const upserts: { team_id: string; round: string }[] = [];
+      const keepKeys = new Set<string>();
       for (const round of ROUNDS) {
         const teamIds = advancing[round.key] || [];
         for (const teamId of teamIds) {
-          inserts.push({ team_id: teamId, round: round.key });
+          upserts.push({ team_id: teamId, round: round.key });
+          keepKeys.add(`${teamId}|${round.key}`);
         }
       }
 
-      if (inserts.length > 0) {
-        const { error } = await supabase.from("actual_advancing").insert(inserts);
+      // Upsert all current selections
+      if (upserts.length > 0) {
+        const { error } = await supabase
+          .from("actual_advancing")
+          .upsert(upserts, { onConflict: "team_id,round" });
         if (error) throw error;
+      }
+
+      // Selectively delete only rows no longer in current state
+      const { data: existing } = await supabase
+        .from("actual_advancing")
+        .select("id, team_id, round");
+
+      if (existing) {
+        const staleIds = existing
+          .filter((row) => !keepKeys.has(`${row.team_id}|${row.round}`))
+          .map((row) => row.id);
+        if (staleIds.length > 0) {
+          const { error: delError } = await supabase
+            .from("actual_advancing")
+            .delete()
+            .in("id", staleIds);
+          if (delError) throw delError;
+        }
       }
 
       // Score predictions and recalculate leaderboard
@@ -188,12 +207,29 @@ export default function AdminAvancesPage() {
         };
       });
 
-      // Delete all existing then insert (simpler than upsert with potential missing rows)
-      const { error: delError } = await supabase.from("actual_awards").delete().gt("created_at", "1970-01-01");
-      if (delError) throw delError;
-
-      const { error } = await supabase.from("actual_awards").insert(upserts);
+      // Upsert all current awards
+      const { error } = await supabase
+        .from("actual_awards")
+        .upsert(upserts, { onConflict: "award_type" });
       if (error) throw error;
+
+      // Selectively delete award types no longer present
+      const activeTypes = upserts.map((u) => u.award_type);
+      const { data: existingAwards } = await supabase
+        .from("actual_awards")
+        .select("id, award_type");
+      if (existingAwards) {
+        const staleAwardIds = existingAwards
+          .filter((row) => !activeTypes.includes(row.award_type))
+          .map((row) => row.id);
+        if (staleAwardIds.length > 0) {
+          const { error: delError } = await supabase
+            .from("actual_awards")
+            .delete()
+            .in("id", staleAwardIds);
+          if (delError) throw delError;
+        }
+      }
 
       // Score predictions and recalculate leaderboard
       const { error: scoreError } = await supabase.rpc("score_award_predictions");
