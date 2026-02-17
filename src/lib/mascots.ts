@@ -1,7 +1,7 @@
 export interface Mascot {
   id: string;
   name: string;
-  year: number;
+  year?: number;
   country: string;
   imageUrl: string;
 }
@@ -23,6 +23,24 @@ export const MASCOTS: Mascot[] = [
   { id: 'zabivaka', name: 'Zabivaka', year: 2018, country: 'Rusia', imageUrl: '/zabivaka.jpeg' },
   { id: 'laeeb', name: "La'eeb", year: 2022, country: 'Qatar', imageUrl: "/la'eeb.jpeg" },
   { id: 'maple-zayu-clutch', name: 'Maple, Zayu & Clutch', year: 2026, country: 'USA/Mexico/Canada', imageUrl: '/maple,zayu&clutch.jpeg' },
+
+  { id: 'pele', name: 'Pelé', country: 'Brasil', imageUrl: '/pele.jpeg' },
+  { id: 'maradona', name: 'Maradona', country: 'Argentina', imageUrl: '/maradona.jpeg' },
+  { id: 'ronaldo', name: 'Ronaldo', country: 'Brasil', imageUrl: '/ronaldo.jpeg' },
+  { id: 'ronaldinho', name: 'Ronaldinho', country: 'Brasil', imageUrl: '/ronaldinho.jpeg' },
+  { id: 'kempes', name: 'Kempes', country: 'Argentina', imageUrl: '/kempes.jpeg' },
+  { id: 'batistuta', name: 'Batistuta', country: 'Argentina', imageUrl: '/batistuta.jpeg' },
+  { id: 'cubillas', name: 'Cubillas', country: 'Perú', imageUrl: '/cubillas.jpeg' },
+  { id: 'keylor', name: 'Keylor', country: 'Costa Rica', imageUrl: '/keylor.jpeg' },
+  { id: 'forlan', name: 'Forlán', country: 'Uruguay', imageUrl: '/forlan.jpeg' },
+  { id: 'marquez', name: 'Rafa M', country: 'México', imageUrl: '/marquez.jpeg' },
+  { id: 'pibe', name: 'El Pibe', country: 'Colombia', imageUrl: '/pibe.jpeg' },
+  { id: 'higuita', name: 'Higuita', country: 'Colombia', imageUrl: '/higuita.jpeg' },
+  { id: 'tino', name: 'Tino', country: 'Colombia', imageUrl: '/tino.jpeg' },
+
+  { id: 'bilardo', name: 'Bilardo', country: 'Argentina', imageUrl: '/bilardo.jpeg' },
+  { id: 'pekerman', name: 'Pekerman', country: 'Argentina', imageUrl: '/pekerman.jpeg' },
+  { id: 'maturana', name: 'Maturana', country: 'Colombia', imageUrl: '/maturana.jpeg' },
 ];
 
 export function getMascotById(id: string): Mascot | undefined {

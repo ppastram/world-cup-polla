@@ -43,6 +43,7 @@ export interface Match {
   match_date: string;
   venue: string | null;
   external_id: number | null;
+  manual_override?: boolean;
   created_at: string;
   updated_at: string;
   // Joined
@@ -67,6 +68,7 @@ export type AdvancingRound =
   | "quarter"
   | "semi"
   | "final"
+  | "third_place"
   | "champion";
 
 export interface AdvancingPrediction {
@@ -131,6 +133,21 @@ export interface ScoringSetting {
   key: string;
   value: number;
   description: string;
+}
+
+export interface BlogPost {
+  id: string;
+  author_id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BlogRead {
+  id: string;
+  user_id: string;
+  last_read_at: string;
 }
 
 export interface Achievement {

@@ -47,7 +47,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex flex-col items-center gap-3">
             <img src="/wc-logo-blue-and-green.jpeg" alt="WC 2026" className="h-20 drop-shadow-lg" />
-            <span className="text-2xl font-bold text-gold-400">Polla Mundialista</span>
+            <span className="text-2xl font-bold text-gold-400">Ampolla Mundialista</span>
           </Link>
         </div>
 

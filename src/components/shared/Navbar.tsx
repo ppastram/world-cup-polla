@@ -43,6 +43,7 @@ export default function Navbar() {
   const { user, profile, loading } = useUser();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [hasUnreadPosts, setHasUnreadPosts] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,52 @@ export default function Navbar() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  // Check for unread blog posts
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+
+    async function checkUnread() {
+      const { data: latestPost } = await supabase
+        .from("blog_posts")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!latestPost) {
+        setHasUnreadPosts(false);
+        return;
+      }
+
+      const { data: readRecord } = await supabase
+        .from("blog_reads")
+        .select("last_read_at")
+        .eq("user_id", user!.id)
+        .single();
+
+      if (!readRecord || new Date(latestPost.created_at) > new Date(readRecord.last_read_at)) {
+        setHasUnreadPosts(true);
+      } else {
+        setHasUnreadPosts(false);
+      }
+    }
+
+    checkUnread();
+
+    // Listen for new blog posts in real-time
+    const channel = supabase
+      .channel("blog_posts_changes")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "blog_posts" }, () => {
+        setHasUnreadPosts(true);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -77,7 +124,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-gold-400 font-bold text-lg"
           >
             <img src="/wc-logo-minimalist.jpeg" alt="WC 2026" className="w-8 h-8 rounded-sm" />
-            <span className="hidden sm:inline">Polla Mundialista</span>
+            <span className="hidden sm:inline">Ampolla Mundialista</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -85,11 +132,12 @@ export default function Navbar() {
             {mainNavItems.map((item) => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
+              const showDot = item.href === "/organizador" && hasUnreadPosts;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
                     active
                       ? "bg-gold-500/10 text-gold-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -97,6 +145,9 @@ export default function Navbar() {
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
+                  {showDot && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
                 </Link>
               );
             })}
@@ -185,12 +236,13 @@ export default function Navbar() {
             {[...mainNavItems, ...moreNavItems].map((item) => {
               const Icon = item.icon;
               const active = pathname.startsWith(item.href);
+              const showDot = item.href === "/organizador" && hasUnreadPosts;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm ${
+                  className={`relative flex items-center gap-3 px-3 py-3 rounded-lg text-sm ${
                     active
                       ? "bg-gold-500/10 text-gold-400"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -198,6 +250,9 @@ export default function Navbar() {
                 >
                   <Icon className="w-5 h-5" />
                   {item.label}
+                  {showDot && (
+                    <span className="w-2 h-2 bg-red-500 rounded-full ml-auto" />
+                  )}
                 </Link>
               );
             })}

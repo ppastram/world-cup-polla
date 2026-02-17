@@ -69,7 +69,7 @@ function FiestaTheme() {
             className="mx-auto h-32 md:h-40 mb-6 drop-shadow-2xl"
           />
           <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-green-400 via-yellow-300 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
-            Polla Mundialista 2026
+            Ampolla Mundialista 2026
           </h1>
           <div className="flex items-center justify-center gap-3 mt-4 text-2xl">
             <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
@@ -193,7 +193,7 @@ function FiestaTheme() {
           <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
         </div>
         <p className="text-green-400 text-sm">FIFA World Cup 2026 · México · United States · Canada</p>
-        <p className="text-green-700 text-xs mt-2">Polla Mundialista — Predice, Compite, Gana</p>
+        <p className="text-green-700 text-xs mt-2">Ampolla Mundialista — Predice, Compite, Gana</p>
       </section>
     </div>
   );
@@ -361,7 +361,7 @@ function EstadioTheme() {
           <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
         </div>
         <p className="text-gray-400 text-sm">FIFA World Cup 2026 · México · United States · Canada</p>
-        <p className="text-gray-600 text-xs mt-2">Polla Mundialista — Predice, Compite, Gana</p>
+        <p className="text-gray-600 text-xs mt-2">Ampolla Mundialista — Predice, Compite, Gana</p>
       </section>
     </div>
   );
@@ -382,7 +382,7 @@ function RetroTheme() {
             Edición Especial · 2026
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-navy-900 tracking-tight" style={{ color: "#1a1a4e", fontFamily: "Georgia, serif" }}>
-            Polla Mundialista
+            Ampolla Mundialista
           </h1>
           <p className="text-3xl font-black mt-1" style={{ color: "#b8860b", fontFamily: "Georgia, serif" }}>★ 2026 ★</p>
           <p className="mt-4 text-lg text-amber-800 max-w-xl mx-auto" style={{ fontFamily: "Georgia, serif" }}>
@@ -500,7 +500,7 @@ function TropicalTheme() {
         <div className="relative z-10 text-center py-20 px-4">
           <img src={IMG.wc2026Logo} alt="FIFA World Cup 2026" className="mx-auto h-28 md:h-36 mb-5 drop-shadow-md" />
           <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-orange-500 via-rose-500 to-teal-500 bg-clip-text text-transparent">
-            Polla Mundialista 2026
+            Ampolla Mundialista 2026
           </h1>
           <div className="flex items-center justify-center gap-3 mt-4 text-2xl">
             <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>

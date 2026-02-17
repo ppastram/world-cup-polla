@@ -13,6 +13,7 @@ export const SCORING = {
   QUARTER: 5,
   SEMI: 8,
   FINAL: 12,
+  THIRD_PLACE: 10,
   CHAMPION: 20,
 
   // Awards
@@ -31,6 +32,7 @@ export const ADVANCING_ROUND_POINTS: Record<string, number> = {
   quarter: SCORING.QUARTER,
   semi: SCORING.SEMI,
   final: SCORING.FINAL,
+  third_place: SCORING.THIRD_PLACE,
   champion: SCORING.CHAMPION,
 };
 

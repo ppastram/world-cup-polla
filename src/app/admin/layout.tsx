@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shield, FileText, CreditCard, Users, Settings } from "lucide-react";
+import { Shield, FileText, CreditCard, Users, Settings, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const adminNav = [
   { href: "/admin/resultados", label: "Resultados", icon: FileText },
+  { href: "/admin/avances", label: "Avances", icon: Trophy },
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
@@ -56,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-4">
               <Link href="/predicciones" className="flex items-center gap-2 text-gold-400 font-bold">
                 <img src="/wc-logo-minimalist.jpeg" alt="WC 2026" className="w-7 h-7 rounded-sm" />
-                <span className="hidden sm:inline">Polla Mundialista</span>
+                <span className="hidden sm:inline">Ampolla Mundialista</span>
               </Link>
               <div className="flex items-center gap-1 bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-xs font-semibold">
                 <Shield className="w-3 h-3" />

@@ -34,7 +34,7 @@ export default function PrediccionesPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // Predictions state
-  const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number }>>({});
+  const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number; pointsEarned?: number | null }>>({});
   const [advancingPredictions, setAdvancingPredictions] = useState<Record<string, string[]>>({});
   const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number }>>({});
 
@@ -85,9 +85,9 @@ export default function PrediccionesPage() {
 
       // Build match predictions map
       if (matchPreds) {
-        const map: Record<string, { home: number; away: number }> = {};
+        const map: Record<string, { home: number; away: number; pointsEarned?: number | null }> = {};
         for (const p of matchPreds) {
-          map[p.match_id] = { home: p.home_score, away: p.away_score };
+          map[p.match_id] = { home: p.home_score, away: p.away_score, pointsEarned: p.points_earned };
         }
         setMatchPredictions(map);
       }
@@ -160,7 +160,7 @@ export default function PrediccionesPage() {
     }
 
     // Remove teams that are no longer qualified from all manual rounds
-    const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'champion'] as const;
+    const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'] as const;
     setAdvancingPredictions((current) => {
       const updated = { ...current };
       let changed = false;
@@ -205,32 +205,51 @@ export default function PrediccionesPage() {
           if (error) throw error;
         }
       } else if (currentStep === 3) {
-        // Save advancing predictions
-        // Delete existing then insert new
-        await supabase
-          .from('advancing_predictions')
-          .delete()
-          .eq('user_id', user.id);
-
-        const inserts: { user_id: string; team_id: string; round: string }[] = [];
+        // Save advancing predictions using UPSERT + selective cleanup
+        // Build full set of (user_id, team_id, round) tuples to keep
+        const upserts: { user_id: string; team_id: string; round: string }[] = [];
         // Auto-insert round_32 from computation
         for (const teamId of autoRound32) {
-          inserts.push({ user_id: user.id, team_id: teamId, round: 'round_32' });
+          upserts.push({ user_id: user.id, team_id: teamId, round: 'round_32' });
         }
         // Manual rounds
-        const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'champion'] as const;
+        const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'] as const;
         for (const round of manualRounds) {
           const teamIds = advancingPredictions[round] || [];
           for (const teamId of teamIds) {
-            inserts.push({ user_id: user.id, team_id: teamId, round });
+            upserts.push({ user_id: user.id, team_id: teamId, round });
           }
         }
 
-        if (inserts.length > 0) {
+        // Upsert all current predictions
+        if (upserts.length > 0) {
           const { error } = await supabase
             .from('advancing_predictions')
-            .insert(inserts);
+            .upsert(upserts, { onConflict: 'user_id,team_id,round' });
           if (error) throw error;
+        }
+
+        // Build set of team_id+round keys to keep
+        const keepKeys = new Set(upserts.map((u) => `${u.team_id}|${u.round}`));
+
+        // Fetch existing rows and delete only stale ones
+        const { data: existing } = await supabase
+          .from('advancing_predictions')
+          .select('id, team_id, round')
+          .eq('user_id', user.id);
+
+        if (existing) {
+          const staleIds = existing
+            .filter((row) => !keepKeys.has(`${row.team_id}|${row.round}`))
+            .map((row) => row.id);
+
+          if (staleIds.length > 0) {
+            const { error: delError } = await supabase
+              .from('advancing_predictions')
+              .delete()
+              .in('id', staleIds);
+            if (delError) throw delError;
+          }
         }
       } else if (currentStep === 4) {
         // Save award predictions
@@ -274,12 +293,12 @@ export default function PrediccionesPage() {
     (m) => m.stage === 'group' && m.home_team && m.away_team
   ).length;
   const predictedMatchCount = Object.keys(matchPredictions).length;
-  const manualAdvancingCount = ['round_16', 'quarter', 'semi', 'final', 'champion'].reduce(
+  const manualAdvancingCount = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'].reduce(
     (sum, round) => sum + (advancingPredictions[round]?.length || 0),
     0
   );
   const advancingCount = autoRound32.length + manualAdvancingCount;
-  const totalAdvancingExpected = 32 + 16 + 8 + 4 + 2 + 1; // 63
+  const totalAdvancingExpected = 32 + 16 + 8 + 4 + 2 + 1 + 1; // 64
   const filledAwards = Object.values(awardPredictions).filter(
     (v) => v.player_name?.trim() || v.total_goals_guess != null
   ).length;

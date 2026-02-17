@@ -9,11 +9,11 @@ const geistSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Polla Mundialista 2026",
+  title: "Ampolla Mundialista 2026",
   description:
     "Predice los resultados del Mundial 2026 y compite con tus amigos",
   openGraph: {
-    title: "Polla Mundialista 2026",
+    title: "Ampolla Mundialista 2026",
     description:
       "Predice los resultados del Mundial 2026 y compite con tus amigos",
   },

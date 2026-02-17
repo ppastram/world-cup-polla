@@ -50,45 +50,61 @@ export default function AdminResultadosPage() {
     const homeScore = parseInt(score.home);
     const awayScore = parseInt(score.away);
 
-    // Update match
-    await supabase
-      .from("matches")
-      .update({
-        home_score: homeScore,
-        away_score: awayScore,
-        status: "finished",
-      })
-      .eq("id", matchId);
+    try {
+      // Update match
+      const { error: matchError } = await supabase
+        .from("matches")
+        .update({
+          home_score: homeScore,
+          away_score: awayScore,
+          status: "finished",
+          manual_override: true,
+        })
+        .eq("id", matchId);
 
-    // Recalculate points for all predictions on this match
-    const { data: predictions } = await supabase
-      .from("match_predictions")
-      .select("*")
-      .eq("match_id", matchId);
+      if (matchError) {
+        alert(`Error al guardar partido: ${matchError.message}`);
+        setSaving(null);
+        return;
+      }
 
-    if (predictions) {
-      for (const pred of predictions) {
-        let points = 0;
-        if (pred.home_score === homeScore && pred.away_score === awayScore) {
-          points = 5; // exact
-        } else {
-          const predDiff = pred.home_score - pred.away_score;
-          const actualDiff = homeScore - awayScore;
-          const predResult = Math.sign(predDiff);
-          const actualResult = Math.sign(actualDiff);
-          if (predResult === actualResult) {
-            points = predDiff === actualDiff ? 3 : 2;
+      // Recalculate points for all predictions on this match
+      const { data: predictions } = await supabase
+        .from("match_predictions")
+        .select("*")
+        .eq("match_id", matchId);
+
+      if (predictions) {
+        for (const pred of predictions) {
+          let points = 0;
+          if (pred.home_score === homeScore && pred.away_score === awayScore) {
+            points = 5; // exact
+          } else {
+            const predDiff = pred.home_score - pred.away_score;
+            const actualDiff = homeScore - awayScore;
+            const predResult = Math.sign(predDiff);
+            const actualResult = Math.sign(actualDiff);
+            if (predResult === actualResult) {
+              points = predDiff === actualDiff ? 3 : 2;
+            }
+          }
+          const { error: predError } = await supabase
+            .from("match_predictions")
+            .update({ points_earned: points })
+            .eq("id", pred.id);
+
+          if (predError) {
+            console.error("Error updating prediction:", predError.message);
           }
         }
-        await supabase
-          .from("match_predictions")
-          .update({ points_earned: points })
-          .eq("id", pred.id);
       }
-    }
 
-    // Recalculate leaderboard
-    await supabase.rpc("recalculate_leaderboard");
+      // Recalculate leaderboard
+      await supabase.rpc("recalculate_leaderboard");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      alert(`Error al guardar: ${message}`);
+    }
 
     setSaving(null);
     fetchMatches();

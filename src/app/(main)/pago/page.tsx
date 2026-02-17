@@ -113,7 +113,7 @@ export default function PagoPage() {
         <CreditCard className="w-7 h-7 text-gold-400" />
         <div>
           <h1 className="text-2xl font-bold text-white">Pago</h1>
-          <p className="text-sm text-gray-500">Inscripcion a la Polla Mundialista</p>
+          <p className="text-sm text-gray-500">Inscripcion a la Ampolla Mundialista</p>
         </div>
       </div>
 

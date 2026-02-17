@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import MascotSelector from "@/components/shared/MascotSelector";
 
 export default function RegistroPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function RegistroPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedMascot, setSelectedMascot] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +32,7 @@ export default function RegistroPage() {
       email,
       password,
       options: {
-        data: { display_name: displayName },
+        data: { display_name: displayName, avatar_url: selectedMascot },
       },
     });
 
@@ -60,7 +62,7 @@ export default function RegistroPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex flex-col items-center gap-3">
             <img src="/wc-logo-blue-and-green.jpeg" alt="WC 2026" className="h-20 drop-shadow-lg" />
-            <span className="text-2xl font-bold text-gold-400">Polla Mundialista</span>
+            <span className="text-2xl font-bold text-gold-400">Ampolla Mundialista</span>
           </Link>
         </div>
 
@@ -79,9 +81,16 @@ export default function RegistroPage() {
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full bg-wc-darker border border-wc-border rounded-lg pl-10 pr-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50"
-                  placeholder="Tu nombre"
+                  placeholder="Tu nombre o usuario"
                   required
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-400 block mb-1">Elige tu avatar</label>
+              <div className="max-h-48 overflow-y-auto rounded-lg border border-wc-border p-1">
+                <MascotSelector selected={selectedMascot} onSelect={setSelectedMascot} compact />
               </div>
             </div>
 

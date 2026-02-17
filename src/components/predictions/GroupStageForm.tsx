@@ -11,7 +11,7 @@ interface GroupStageFormProps {
   groups: string[];
   matches: Match[];
   teams: Team[];
-  predictions: Record<string, { home: number; away: number }>;
+  predictions: Record<string, { home: number; away: number; pointsEarned?: number | null }>;
   onPredictionChange: (matchId: string, home: number, away: number) => void;
   disabled?: boolean;
 }
@@ -69,6 +69,9 @@ export default function GroupStageForm({
                     awayScore={prediction?.away ?? null}
                     onChange={(home, away) => onPredictionChange(match.id, home, away)}
                     disabled={disabled}
+                    pointsEarned={prediction?.pointsEarned}
+                    actualHome={match.home_score}
+                    actualAway={match.away_score}
                   />
                 );
               })}

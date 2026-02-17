@@ -18,6 +18,7 @@ const ROUNDS = [
   { key: 'quarter', label: 'Cuartos de Final', count: 8, prev: 'round_16' },
   { key: 'semi', label: 'Semifinales', count: 4, prev: 'quarter' },
   { key: 'final', label: 'Final', count: 2, prev: 'semi' },
+  { key: 'third_place', label: 'Tercer Puesto', count: 1, prev: 'semi' },
   { key: 'champion', label: 'Campeon', count: 1, prev: 'final' },
 ] as const;
 
@@ -48,6 +49,14 @@ export default function AdvancingTeamsSelector({
         return a.name.localeCompare(b.name);
       });
     }
+    // Third place: show semi teams NOT in the final
+    if (round.key === 'third_place') {
+      const semiTeams = predictions['semi'] || [];
+      const finalTeams = predictions['final'] || [];
+      return teams
+        .filter((t) => semiTeams.includes(t.id) && !finalTeams.includes(t.id))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
     const prevKey = round.prev;
     if (!prevKey) return [];
     const prevSelected = prevKey === 'round_32' ? effectiveRound32 : (predictions[prevKey] || []);
@@ -74,7 +83,21 @@ export default function AdvancingTeamsSelector({
           onChange(laterRound.key, laterPredictions.filter((id) => id !== teamId));
         }
       }
+      // If removing from semi, also remove from third_place
+      if (roundKey === 'semi') {
+        const thirdPlacePredictions = predictions['third_place'] || [];
+        if (thirdPlacePredictions.includes(teamId)) {
+          onChange('third_place', thirdPlacePredictions.filter((id) => id !== teamId));
+        }
+      }
     } else {
+      // If adding to final, remove from third_place (mutual exclusion)
+      if (roundKey === 'final') {
+        const thirdPlacePredictions = predictions['third_place'] || [];
+        if (thirdPlacePredictions.includes(teamId)) {
+          onChange('third_place', thirdPlacePredictions.filter((id) => id !== teamId));
+        }
+      }
       if (current.length >= maxCount) return;
       updated = [...current, teamId];
     }
@@ -94,7 +117,8 @@ export default function AdvancingTeamsSelector({
         const isComplete = selected.length === round.count;
 
         const hasPrevSelection = round.key === 'round_32'
-          || (round.prev === 'round_32' ? effectiveRound32.length > 0 : (round.prev && (predictions[round.prev] || []).length > 0));
+          || (round.key === 'third_place' ? (predictions['final'] || []).length > 0
+          : (round.prev === 'round_32' ? effectiveRound32.length > 0 : (round.prev && (predictions[round.prev] || []).length > 0)));
 
         return (
           <div

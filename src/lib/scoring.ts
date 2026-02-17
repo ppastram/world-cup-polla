@@ -42,6 +42,7 @@ export function calculateAdvancingPoints(round: string): number {
     quarter: SCORING.QUARTER,
     semi: SCORING.SEMI,
     final: SCORING.FINAL,
+    third_place: SCORING.THIRD_PLACE,
     champion: SCORING.CHAMPION,
   };
   return roundPoints[round] ?? 0;

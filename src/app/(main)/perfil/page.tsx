@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { User, Mail, CheckCircle, Clock, AlertTriangle, Save, Loader2, Target } from 'lucide-react';
+import { User, Mail, CheckCircle, Clock, AlertTriangle, Save, Loader2, Target, Award } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import MascotAvatar from '@/components/shared/MascotAvatar';
 import MascotSelector from '@/components/shared/MascotSelector';
 import Link from 'next/link';
+import type { UserAchievement } from '@/lib/types';
 
 export default function PerfilPage() {
   const { user, profile, loading: userLoading } = useUser();
@@ -20,6 +21,7 @@ export default function PerfilPage() {
     advancingPredictions: 0,
     awardPredictions: 0,
   });
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
 
   useEffect(() => {
     if (profile) {
@@ -34,7 +36,7 @@ export default function PerfilPage() {
     async function fetchStats() {
       const supabase = createClient();
 
-      const [matchPredRes, matchTotalRes, advRes, awardRes] = await Promise.all([
+      const [matchPredRes, matchTotalRes, advRes, awardRes, achievementsRes] = await Promise.all([
         supabase
           .from('match_predictions')
           .select('id', { count: 'exact', head: true })
@@ -51,6 +53,10 @@ export default function PerfilPage() {
           .from('award_predictions')
           .select('id', { count: 'exact', head: true })
           .eq('user_id', user!.id),
+        supabase
+          .from('user_achievements')
+          .select('*, achievement:achievements(*)')
+          .eq('user_id', user!.id),
       ]);
 
       setPredictionStats({
@@ -59,6 +65,10 @@ export default function PerfilPage() {
         advancingPredictions: advRes.count ?? 0,
         awardPredictions: awardRes.count ?? 0,
       });
+
+      if (achievementsRes.data) {
+        setAchievements(achievementsRes.data as UserAchievement[]);
+      }
     }
 
     fetchStats();
@@ -168,7 +178,7 @@ export default function PerfilPage() {
         {/* Mascot Selection */}
         <div className="mt-4">
           <label className="text-xs text-gray-500 uppercase tracking-wider block mb-3">
-            Avatar (mascota mundialista)
+            Avatar
           </label>
           <MascotSelector selected={selectedMascot} onSelect={setSelectedMascot} />
         </div>
@@ -203,6 +213,40 @@ export default function PerfilPage() {
             </Link>
           )}
         </div>
+      </div>
+
+      {/* Achievements */}
+      <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <Award className="w-5 h-5 text-gold-400" />
+          Logros
+        </h3>
+        {achievements.length === 0 ? (
+          <p className="text-sm text-gray-500">
+            Aun no has ganado logros. Sigue participando para desbloquearlos.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {achievements.map((ua) => (
+              <div
+                key={ua.id}
+                className="flex items-center gap-3 p-3 bg-wc-darker rounded-lg border border-gold-500/20"
+              >
+                <div className="w-10 h-10 rounded-full bg-gold-500/10 flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5 text-gold-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {ua.achievement?.name || 'Logro'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {ua.achievement?.description || ''}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Prediction Stats */}

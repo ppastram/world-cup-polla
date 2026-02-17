@@ -112,7 +112,7 @@ export default function LandingPage() {
             className="mx-auto h-32 md:h-40 mb-6 drop-shadow-2xl"
           />
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4">
-            <span className="text-gradient-gold">Polla</span>{" "}
+            <span className="text-gradient-gold">Ampolla</span>{" "}
             <span className="text-white">Mundialista</span>
           </h1>
           <div className="flex items-center justify-center gap-3 text-2xl mb-2">
@@ -238,7 +238,7 @@ export default function LandingPage() {
         <div className="flex items-center justify-center gap-4 text-xl mb-2">
           <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
         </div>
-        <p className="text-gray-600 text-sm">Polla Mundialista 2026 — México · United States · Canada</p>
+        <p className="text-gray-600 text-sm">Ampolla Mundialista 2026 — México · United States · Canada</p>
       </footer>
     </div>
   );

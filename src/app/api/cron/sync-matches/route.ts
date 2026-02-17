@@ -25,11 +25,23 @@ export async function POST(request: Request) {
       // Find match by external_id
       const { data: existingMatch } = await supabase
         .from("matches")
-        .select("id, status, home_score, away_score")
+        .select("id, status, home_score, away_score, manual_override")
         .eq("external_id", apiMatch.id)
         .single();
 
       if (!existingMatch) continue;
+
+      // Skip score update for manually overridden matches (still allow status updates)
+      if (existingMatch.manual_override) {
+        if (existingMatch.status !== status) {
+          await supabase
+            .from("matches")
+            .update({ status })
+            .eq("id", existingMatch.id);
+          updated++;
+        }
+        continue;
+      }
 
       // Only update if something changed
       const needsUpdate =

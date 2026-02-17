@@ -102,6 +102,7 @@ export default function ReglasPage() {
           { label: 'Acertar equipo en Cuartos de Final', points: SCORING.QUARTER },
           { label: 'Acertar equipo en Semifinales', points: SCORING.SEMI },
           { label: 'Acertar equipo en la Final', points: SCORING.FINAL },
+          { label: 'Acertar al ganador del Tercer Puesto', points: SCORING.THIRD_PLACE },
           { label: 'Acertar al Campeon', points: SCORING.CHAMPION },
         ]}
       />
