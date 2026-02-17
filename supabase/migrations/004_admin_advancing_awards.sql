@@ -93,7 +93,7 @@ SET search_path = public
 AS $$
 BEGIN
   -- Reset all advancing prediction points to 0
-  UPDATE advancing_predictions SET points_earned = 0;
+  UPDATE advancing_predictions SET points_earned = 0 WHERE points_earned IS DISTINCT FROM 0;
 
   -- Award points where user predicted a team that actually advanced in that round
   UPDATE advancing_predictions ap
@@ -120,7 +120,7 @@ SET search_path = public
 AS $$
 BEGIN
   -- Reset all award prediction points to 0
-  UPDATE award_predictions SET points_earned = 0;
+  UPDATE award_predictions SET points_earned = 0 WHERE points_earned IS DISTINCT FROM 0;
 
   -- Score player-based awards (golden_ball, golden_boot, golden_glove, best_young)
   UPDATE award_predictions ap

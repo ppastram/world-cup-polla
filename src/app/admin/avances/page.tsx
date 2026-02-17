@@ -139,7 +139,7 @@ export default function AdminAvancesPage() {
 
     try {
       // Delete all existing
-      const { error: delError } = await supabase.from("actual_advancing").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error: delError } = await supabase.from("actual_advancing").delete().gt("created_at", "1970-01-01");
       if (delError) throw delError;
 
       // Build inserts
@@ -189,7 +189,7 @@ export default function AdminAvancesPage() {
       });
 
       // Delete all existing then insert (simpler than upsert with potential missing rows)
-      const { error: delError } = await supabase.from("actual_awards").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      const { error: delError } = await supabase.from("actual_awards").delete().gt("created_at", "1970-01-01");
       if (delError) throw delError;
 
       const { error } = await supabase.from("actual_awards").insert(upserts);
