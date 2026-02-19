@@ -43,9 +43,11 @@ export default function EstadisticasPage() {
       const { data: champData } = await supabase.rpc('get_champion_picks');
 
       if (champData && champData.length > 0) {
-        const totalPicks = champData.reduce((sum: number, r: any) => sum + Number(r.pick_count), 0);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const totalPicks = champData.reduce((sum: number, r: Record<string, any>) => sum + Number(r.pick_count), 0);
         setChampionPicks(
-          champData.map((r: any) => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          champData.map((r: Record<string, any>) => ({
             team: { id: r.team_id, name: r.team_name, code: r.team_code, flag_url: r.flag_url } as Team,
             count: Number(r.pick_count),
             percentage: Math.round((Number(r.pick_count) / totalPicks) * 100),
@@ -58,7 +60,8 @@ export default function EstadisticasPage() {
 
       if (advData && advData.length > 0) {
         const result: Record<string, GroupWinnerPick[]> = {};
-        for (const r of advData as any[]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const r of advData as Record<string, any>[]) {
           const letter = r.group_letter;
           if (!result[letter]) result[letter] = [];
           result[letter].push({
@@ -108,8 +111,10 @@ export default function EstadisticasPage() {
         const { data: predData } = await supabase.rpc('get_consensus_scores', { match_ids: matchIds });
 
         if (predData) {
-          const predMap: Record<string, any> = {};
-          for (const p of predData as any[]) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const predMap: Record<string, Record<string, any>> = {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          for (const p of predData as Record<string, any>[]) {
             predMap[p.match_id] = p;
           }
 

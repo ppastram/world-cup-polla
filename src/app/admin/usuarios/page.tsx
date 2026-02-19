@@ -27,7 +27,8 @@ export default function AdminUsuariosPage() {
     ]);
 
     const progressByUser: Record<string, number> = {};
-    (progressData ?? []).forEach((row: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (progressData ?? []).forEach((row: Record<string, any>) => {
       progressByUser[row.user_id] = Number(row.progress ?? 0);
     });
 

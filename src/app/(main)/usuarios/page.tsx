@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, CheckCircle, Clock, AlertTriangle, Loader2, ChevronRight } from 'lucide-react';
+import { Users, Loader2, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';

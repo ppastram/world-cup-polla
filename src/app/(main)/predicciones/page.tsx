@@ -239,6 +239,32 @@ export default function PrediccionesPage() {
 
       setSaveMessage('Guardado exitosamente');
       setTimeout(() => setSaveMessage(null), 3000);
+
+      // Check if 100% complete → send email receipt
+      const groupMatchTotal = matches.filter((m) => m.stage === 'group' && m.home_team && m.away_team).length;
+      const matchCount = Object.keys(matchPredictions).length;
+      const manualAdv = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'].reduce(
+        (sum, round) => sum + (advancingPredictions[round]?.length || 0), 0
+      );
+      const advCount = autoRound32.length + manualAdv;
+      const awardCount = Object.values(awardPredictions).filter(
+        (v) => v.player_name?.trim() || v.total_goals_guess != null
+      ).length;
+      const total = groupMatchTotal + 64 + 5;
+      const completed = matchCount + advCount + awardCount;
+
+      if (completed >= total) {
+        try {
+          await fetch('/api/email/send-predictions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id }),
+          });
+        } catch (emailErr) {
+          // Email is best-effort — don't block the save
+          console.error('Failed to send predictions email:', emailErr);
+        }
+      }
     } catch (err) {
       console.error('Error saving predictions:', err);
       setSaveMessage('Error al guardar. Intenta de nuevo.');
