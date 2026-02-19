@@ -36,6 +36,7 @@ export default function PrediccionesPage() {
   // Predictions state
   const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number; pointsEarned?: number | null }>>({});
   const [advancingPredictions, setAdvancingPredictions] = useState<Record<string, string[]>>({});
+  const [advancingPoints, setAdvancingPoints] = useState<Record<string, Record<string, number | null>>>({});
   const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>>({});
 
   const isPastDeadline = new Date() > PREDICTION_DEADLINE;
@@ -80,6 +81,27 @@ export default function PrediccionesPage() {
         .select('*')
         .eq('user_id', user!.id);
 
+      // Fetch actual advancing teams entered by admin (round + team_id)
+      const { data: actualAdvData } = await supabase
+        .from('actual_advancing')
+        .select('round, team_id');
+
+      // Build sets: which teams advanced per round, and which rounds are fully entered
+      const actualTeamsPerRound: Record<string, Set<string>> = {};
+      for (const row of actualAdvData || []) {
+        if (!actualTeamsPerRound[row.round]) actualTeamsPerRound[row.round] = new Set();
+        actualTeamsPerRound[row.round].add(row.team_id);
+      }
+      const expectedPerRound: Record<string, number> = {
+        round_32: 32, round_16: 16, quarter: 8, semi: 4,
+        final: 2, third_place: 1, champion: 1,
+      };
+      const completedRounds = new Set(
+        Object.entries(actualTeamsPerRound)
+          .filter(([round, teamSet]) => teamSet.size >= (expectedPerRound[round] ?? 0))
+          .map(([round]) => round)
+      );
+
       if (teamsData) setTeams(teamsData);
       if (matchesData) setMatches(matchesData);
 
@@ -92,24 +114,52 @@ export default function PrediccionesPage() {
         setMatchPredictions(map);
       }
 
-      // Build advancing predictions map
+      // Build advancing predictions map + points map (cap to max per round)
+      // Show points only when we can determine the outcome:
+      //   - Team IS in actual_advancing → show positive score immediately
+      //   - Team NOT in actual_advancing + round fully entered → show 0 (eliminated)
+      //   - Team NOT in actual_advancing + round NOT fully entered → show nothing (null)
       if (advancingPreds) {
         const map: Record<string, string[]> = {};
+        const pointsMap: Record<string, Record<string, number | null>> = {};
         for (const p of advancingPreds) {
           if (!map[p.round]) map[p.round] = [];
+          const max = expectedPerRound[p.round] ?? 32;
+          if (map[p.round].length >= max) continue; // skip excess
           map[p.round].push(p.team_id);
+
+          const actualTeams = actualTeamsPerRound[p.round];
+          if (!actualTeams) continue; // admin hasn't entered anything for this round
+
+          const teamConfirmed = actualTeams.has(p.team_id);
+          const roundComplete = completedRounds.has(p.round);
+
+          if (teamConfirmed || roundComplete) {
+            // Team confirmed advancing → show positive points
+            // OR round complete and team not in it → show 0
+            if (!pointsMap[p.round]) pointsMap[p.round] = {};
+            pointsMap[p.round][p.team_id] = p.points_earned ?? (teamConfirmed ? null : 0);
+          }
+          // Otherwise: round incomplete and team not confirmed → show nothing
         }
         setAdvancingPredictions(map);
+        setAdvancingPoints(pointsMap);
       }
 
       // Build award predictions map
+      // Only show scores once the admin has entered actual award results
+      const { data: actualAwardsData } = await supabase
+        .from('actual_awards')
+        .select('award_type');
+      const scoredAwards = new Set((actualAwardsData || []).map((r) => r.award_type));
+
       if (awardPreds) {
         const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }> = {};
         for (const p of awardPreds) {
           map[p.award_type] = {
             player_name: p.player_name || undefined,
             total_goals_guess: p.total_goals_guess ?? undefined,
-            points_earned: p.points_earned,
+            points_earned: scoredAwards.has(p.award_type) ? p.points_earned : null,
           };
         }
         setAwardPredictions(map);
@@ -145,7 +195,7 @@ export default function PrediccionesPage() {
   }, [teams, matches, matchPredictions]);
 
 
-  // Save current step
+  // Save ALL predictions across all steps
   const handleSave = useCallback(async () => {
     if (!user || isPastDeadline) return;
 
@@ -153,79 +203,68 @@ export default function PrediccionesPage() {
     setSaveMessage(null);
 
     try {
-      if (currentStep <= 2) {
-        // Save match predictions for current group step
-        const stepGroups = GROUP_STEPS[currentStep];
-        const stepMatches = matches.filter((m) => stepGroups.includes(m.group_letter || ''));
-        const upserts = stepMatches
-          .filter((m) => matchPredictions[m.id])
-          .map((m) => ({
-            user_id: user.id,
-            match_id: m.id,
-            home_score: matchPredictions[m.id].home,
-            away_score: matchPredictions[m.id].away,
-          }));
+      // 1. Save ALL match predictions (steps 0-2)
+      const matchUpserts = matches
+        .filter((m) => matchPredictions[m.id])
+        .map((m) => ({
+          user_id: user.id,
+          match_id: m.id,
+          home_score: matchPredictions[m.id].home,
+          away_score: matchPredictions[m.id].away,
+        }));
 
-        if (upserts.length > 0) {
-          const { error } = await supabase
-            .from('match_predictions')
-            .upsert(upserts, { onConflict: 'user_id,match_id' });
-          if (error) throw error;
-        }
-      } else if (currentStep === 3) {
-        // Safety guard: refuse to save if state looks incomplete
-        if (autoRound32.length === 0) {
-          setSaveMessage('Error: No se detectaron equipos clasificados. Recarga la página e intenta de nuevo.');
-          setSaving(false);
-          return;
-        }
+      if (matchUpserts.length > 0) {
+        const { error } = await supabase
+          .from('match_predictions')
+          .upsert(matchUpserts, { onConflict: 'user_id,match_id' });
+        if (error) throw error;
+      }
 
-        // Save advancing predictions (upsert-only, never delete)
-        const upserts: { user_id: string; team_id: string; round: string }[] = [];
-        // Auto-insert round_32 from computation
+      // 2. Save advancing predictions (step 3)
+      if (autoRound32.length > 0) {
+        const advUpserts: { user_id: string; team_id: string; round: string }[] = [];
         for (const teamId of autoRound32) {
-          upserts.push({ user_id: user.id, team_id: teamId, round: 'round_32' });
+          advUpserts.push({ user_id: user.id, team_id: teamId, round: 'round_32' });
         }
-        // Manual rounds
-        const manualRounds = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'] as const;
-        for (const round of manualRounds) {
-          const teamIds = advancingPredictions[round] || [];
+        const manualRoundsMax: { key: string; max: number }[] = [
+          { key: 'round_16', max: 16 }, { key: 'quarter', max: 8 },
+          { key: 'semi', max: 4 }, { key: 'final', max: 2 },
+          { key: 'third_place', max: 1 }, { key: 'champion', max: 1 },
+        ];
+        for (const { key, max } of manualRoundsMax) {
+          const teamIds = (advancingPredictions[key] || []).slice(0, max);
           for (const teamId of teamIds) {
-            upserts.push({ user_id: user.id, team_id: teamId, round });
+            advUpserts.push({ user_id: user.id, team_id: teamId, round: key });
           }
         }
-
-        // Upsert all current predictions (never delete existing ones)
-        if (upserts.length > 0) {
+        if (advUpserts.length > 0) {
           const { error } = await supabase
             .from('advancing_predictions')
-            .upsert(upserts, { onConflict: 'user_id,team_id,round' });
+            .upsert(advUpserts, { onConflict: 'user_id,team_id,round' });
           if (error) throw error;
         }
-      } else if (currentStep === 4) {
-        // Save award predictions
-        const upserts: {
-          user_id: string;
-          award_type: AwardType;
-          player_name: string | null;
-          total_goals_guess: number | null;
-        }[] = [];
+      }
 
-        for (const [awardType, value] of Object.entries(awardPredictions)) {
-          upserts.push({
-            user_id: user.id,
-            award_type: awardType as AwardType,
-            player_name: value.player_name || null,
-            total_goals_guess: value.total_goals_guess ?? null,
-          });
-        }
-
-        if (upserts.length > 0) {
-          const { error } = await supabase
-            .from('award_predictions')
-            .upsert(upserts, { onConflict: 'user_id,award_type' });
-          if (error) throw error;
-        }
+      // 3. Save award predictions (step 4)
+      const awardUpserts: {
+        user_id: string;
+        award_type: AwardType;
+        player_name: string | null;
+        total_goals_guess: number | null;
+      }[] = [];
+      for (const [awardType, value] of Object.entries(awardPredictions)) {
+        awardUpserts.push({
+          user_id: user.id,
+          award_type: awardType as AwardType,
+          player_name: value.player_name || null,
+          total_goals_guess: value.total_goals_guess ?? null,
+        });
+      }
+      if (awardUpserts.length > 0) {
+        const { error } = await supabase
+          .from('award_predictions')
+          .upsert(awardUpserts, { onConflict: 'user_id,award_type' });
+        if (error) throw error;
       }
 
       setSaveMessage('Guardado exitosamente');
@@ -237,7 +276,7 @@ export default function PrediccionesPage() {
     } finally {
       setSaving(false);
     }
-  }, [user, currentStep, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32]);
+  }, [user, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32]);
 
   // Completion stats
   const groupMatchCount = matches.filter(
@@ -390,6 +429,7 @@ export default function PrediccionesPage() {
             onChange={handleAdvancingChange}
             disabled={isPastDeadline}
             autoRound32={autoRound32}
+            pointsMap={advancingPoints}
           />
         )}
 

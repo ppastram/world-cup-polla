@@ -10,6 +10,13 @@ interface AdvancingTeamsSelectorProps {
   onChange: (round: string, teamIds: string[]) => void;
   disabled?: boolean;
   autoRound32?: string[];
+  /** points_earned per round per team_id (null = not yet scored) */
+  pointsMap?: Record<string, Record<string, number | null>>;
+}
+
+function getPointsBadgeClass(points: number): string {
+  if (points > 0) return 'bg-emerald-500/20 text-emerald-400';
+  return 'bg-red-500/20 text-red-400';
 }
 
 const ROUNDS = [
@@ -28,6 +35,7 @@ export default function AdvancingTeamsSelector({
   onChange,
   disabled = false,
   autoRound32,
+  pointsMap = {},
 }: AdvancingTeamsSelectorProps) {
   const [expandedRound, setExpandedRound] = useState<string>(autoRound32 ? 'round_32' : 'round_32');
 
@@ -116,6 +124,10 @@ export default function AdvancingTeamsSelector({
         const isExpanded = expandedRound === round.key;
         const isComplete = selected.length === round.count;
 
+        const roundPoints = pointsMap[round.key] || {};
+        const hasAnyScored = Object.values(roundPoints).some((p) => p !== null);
+        const roundTotalPoints = Object.values(roundPoints).reduce((sum: number, p) => sum + (p || 0), 0);
+
         const hasPrevSelection = round.key === 'round_32'
           || (round.key === 'third_place' ? (predictions['final'] || []).length > 0
           : (round.prev === 'round_32' ? effectiveRound32.length > 0 : (round.prev && (predictions[round.prev] || []).length > 0)));
@@ -158,9 +170,16 @@ export default function AdvancingTeamsSelector({
                   )}
                 </div>
               </div>
-              <span className="text-xs text-gray-400">
-                {selected.length}/{round.count}
-              </span>
+              <div className="flex items-center gap-2">
+                {hasAnyScored && (
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${roundTotalPoints > 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                    +{roundTotalPoints}
+                  </span>
+                )}
+                <span className="text-xs text-gray-400">
+                  {selected.length}/{round.count}
+                </span>
+              </div>
             </button>
 
             {/* Round Content */}
@@ -174,20 +193,35 @@ export default function AdvancingTeamsSelector({
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-3">
-                      {available.map((team) => (
-                        <div
-                          key={team.id}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg border bg-gold-500/10 border-gold-500/40 text-gold-300"
-                        >
-                          <img
-                            src={team.flag_url}
-                            alt={team.code}
-                            className="w-6 h-4 object-cover rounded-sm shrink-0 border border-wc-border"
-                          />
-                          <span className="text-xs font-medium truncate">{team.name}</span>
-                          <span className="text-[10px] text-gray-500 ml-auto">{team.group_letter}</span>
-                        </div>
-                      ))}
+                      {available.map((team) => {
+                        const teamPoints = roundPoints[team.id];
+                        const isScored = teamPoints !== null && teamPoints !== undefined;
+                        return (
+                          <div
+                            key={team.id}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border relative ${
+                              isScored && teamPoints > 0
+                                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                                : isScored
+                                ? 'bg-red-500/10 border-red-500/40 text-red-300'
+                                : 'bg-gold-500/10 border-gold-500/40 text-gold-300'
+                            }`}
+                          >
+                            {isScored && (
+                              <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${getPointsBadgeClass(teamPoints)}`}>
+                                +{teamPoints}
+                              </span>
+                            )}
+                            <img
+                              src={team.flag_url}
+                              alt={team.code}
+                              className="w-6 h-4 object-cover rounded-sm shrink-0 border border-wc-border"
+                            />
+                            <span className="text-xs font-medium truncate">{team.name}</span>
+                            <span className="text-[10px] text-gray-500 ml-auto">{team.group_letter}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )
                 ) : (
@@ -208,6 +242,8 @@ export default function AdvancingTeamsSelector({
                           {available.map((team) => {
                             const isSelected = selected.includes(team.id);
                             const isFull = selected.length >= round.count && !isSelected;
+                            const teamPoints = roundPoints[team.id];
+                            const isScored = isSelected && teamPoints !== null && teamPoints !== undefined;
 
                             return (
                               <button
@@ -215,14 +251,23 @@ export default function AdvancingTeamsSelector({
                                 type="button"
                                 onClick={() => toggleTeam(round.key, team.id, round.count)}
                                 disabled={disabled || (isFull && !isSelected)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all ${
-                                  isSelected
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all relative ${
+                                  isScored && teamPoints > 0
+                                    ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
+                                    : isScored
+                                    ? 'bg-red-500/20 border-red-500/40 text-red-300'
+                                    : isSelected
                                     ? 'bg-gold-500/20 border-gold-500/60 text-gold-300'
                                     : isFull
                                     ? 'bg-wc-darker border-wc-border text-gray-600 cursor-not-allowed opacity-40'
                                     : 'bg-wc-darker border-wc-border text-gray-300 hover:border-gold-500/40 hover:text-white'
                                 }`}
                               >
+                                {isScored && (
+                                  <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${getPointsBadgeClass(teamPoints)}`}>
+                                    +{teamPoints}
+                                  </span>
+                                )}
                                 <img
                                   src={team.flag_url}
                                   alt={team.code}

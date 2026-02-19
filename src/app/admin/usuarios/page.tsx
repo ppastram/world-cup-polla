@@ -5,8 +5,12 @@ import { Shield, ShieldOff, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
+type ProfileWithProgress = Profile & {
+  predictionProgress?: number;
+};
+
 export default function AdminUsuariosPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<ProfileWithProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -16,11 +20,26 @@ export default function AdminUsuariosPage() {
 
   async function fetchProfiles() {
     const supabase = createClient();
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("display_name");
-    if (data) setProfiles(data);
+
+    const [{ data: profilesData }, { data: progressData }] = await Promise.all([
+      supabase.from("profiles").select("*").order("display_name"),
+      supabase.rpc("admin_match_prediction_progress"),
+    ]);
+
+    const progressByUser: Record<string, number> = {};
+    (progressData ?? []).forEach((row: any) => {
+      progressByUser[row.user_id] = Number(row.progress ?? 0);
+    });
+
+    if (profilesData) {
+      setProfiles(
+        profilesData.map((p) => ({
+          ...p,
+          predictionProgress: progressByUser[p.id] ?? 0,
+        })),
+      );
+    }
+
     setLoading(false);
   }
 
@@ -54,6 +73,7 @@ export default function AdminUsuariosPage() {
               <th className="text-left text-xs text-gray-500 px-4 py-3">Pago</th>
               <th className="text-left text-xs text-gray-500 px-4 py-3">Admin</th>
               <th className="text-left text-xs text-gray-500 px-4 py-3">Registro</th>
+              <th className="text-left text-xs text-gray-500 px-4 py-3">Predicciones</th>
               <th className="text-right text-xs text-gray-500 px-4 py-3">Acciones</th>
             </tr>
           </thead>
@@ -83,6 +103,15 @@ export default function AdminUsuariosPage() {
                 </td>
                 <td className="px-4 py-3 text-xs text-gray-500">
                   {new Date(p.created_at).toLocaleDateString("es-CO")}
+                </td>
+                <td className="px-4 py-3 text-xs text-gray-300">
+                  {(() => {
+                    const pct = p.predictionProgress ?? 0;
+
+                    if (pct === 0) return "0% (sin empezar)";
+                    if (pct >= 100) return "100% (completo)";
+                    return `${Math.round(pct)}% (en progreso)`;
+                  })()}
                 </td>
                 <td className="px-4 py-3 text-right">
                   {updating === p.id ? (

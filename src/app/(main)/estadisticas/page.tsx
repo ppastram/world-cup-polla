@@ -31,6 +31,7 @@ export default function EstadisticasPage() {
   const [championPicks, setChampionPicks] = useState<ChampionPick[]>([]);
   const [groupWinners, setGroupWinners] = useState<Record<string, GroupWinnerPick[]>>({});
   const [avgTotalGoals, setAvgTotalGoals] = useState<number | null>(null);
+  const [actualTotalGoals, setActualTotalGoals] = useState<{ goals: number; matches: number } | null>(null);
   const [consensusScores, setConsensusScores] = useState<ConsensusScore[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -100,6 +101,20 @@ export default function EstadisticasPage() {
       if (goalsData && goalsData.length > 0) {
         const sum = goalsData.reduce((acc, r) => acc + (r.total_goals_guess ?? 0), 0);
         setAvgTotalGoals(Math.round(sum / goalsData.length));
+      }
+
+      // 3b. Actual total goals scored in finished matches
+      const { data: finishedMatches } = await supabase
+        .from('matches')
+        .select('home_score, away_score')
+        .eq('status', 'finished');
+
+      if (finishedMatches && finishedMatches.length > 0) {
+        const totalGoals = finishedMatches.reduce(
+          (acc, m) => acc + (m.home_score ?? 0) + (m.away_score ?? 0),
+          0
+        );
+        setActualTotalGoals({ goals: totalGoals, matches: finishedMatches.length });
       }
 
       // 4. Consensus scores for upcoming matches
@@ -218,6 +233,20 @@ export default function EstadisticasPage() {
         </div>
       )}
 
+      {/* Actual total goals scored */}
+      {actualTotalGoals !== null && (
+        <div className="bg-wc-card border border-wc-border rounded-xl p-6">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+            <Target className="w-5 h-5 text-gold-400" />
+            Goles totales en el torneo
+          </h2>
+          <p className="text-4xl font-extrabold text-emerald-400">{actualTotalGoals.goals}</p>
+          <p className="text-sm text-gray-500 mt-1">
+            en {actualTotalGoals.matches} partido{actualTotalGoals.matches !== 1 ? 's' : ''} jugado{actualTotalGoals.matches !== 1 ? 's' : ''} ({(actualTotalGoals.goals / actualTotalGoals.matches).toFixed(1)} por partido)
+          </p>
+        </div>
+      )}
+
       {/* Group favorites */}
       {sortedGroups.length > 0 && (
         <div>
@@ -299,7 +328,7 @@ export default function EstadisticasPage() {
       )}
 
       {/* Empty state */}
-      {championPicks.length === 0 && avgTotalGoals === null && sortedGroups.length === 0 && consensusScores.length === 0 && (
+      {championPicks.length === 0 && avgTotalGoals === null && actualTotalGoals === null && sortedGroups.length === 0 && consensusScores.length === 0 && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <BarChart3 className="w-10 h-10 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500">

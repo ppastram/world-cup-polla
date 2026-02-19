@@ -107,12 +107,14 @@ export default function OrganizadorPage() {
         <p className="text-sm text-gray-400 leading-relaxed">
           Soy Pablo y quise organizar esta ampolla para ponerle emoción al mundial con amigos y familia.
           Le metí amor a hacer una página linda y fácil de usar para que sea bacano seguir la polla y podamos
-          hacer fuerza a favor de nuestras apuestas (y en contra las de los demás!) en tiempo real (y porque tocaba poner
-          en práctica la carrera...).
+          hacer fuerza a favor de nuestras apuestas (y en contra de las de los demás!) en tiempo real (y porque sacarle
+          el jugo a la carrera...).
           <br/> <br/>
           Inviten a amigos, vecinos, familiares, vecinos, novias, mozas, etc para que el premio crezca. Les dejo mi
-          teléfono y correo para que me cuenten si tienen cualquier queja, sugerencia, reclamo. Estaré administrando
+          teléfono y correo para que me cuenten si tienen cualquier queja, sugerencia o reclamo. Estaré administrando
           también los pagos y asegurando que todo funcione correctamente.
+
+          Estaré participando con el usuario &ldquo;paulo&rdquo;, así que por ahí nos vemos!
         </p>
 
         {/* Contact Info */}

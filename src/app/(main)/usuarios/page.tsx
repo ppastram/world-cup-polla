@@ -7,26 +7,10 @@ import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';
 import MascotAvatar from '@/components/shared/MascotAvatar';
 
-const statusConfig: Record<string, { label: string; icon: React.ElementType; badgeClass: string }> = {
-  verified: {
-    label: 'Verificado',
-    icon: CheckCircle,
-    badgeClass: 'text-emerald-400 bg-emerald-900/30 border-emerald-700/50',
-  },
-  uploaded: {
-    label: 'En revision',
-    icon: Clock,
-    badgeClass: 'text-gold-400 bg-gold-900/30 border-gold-700/50',
-  },
-  pending: {
-    label: 'Pendiente',
-    icon: AlertTriangle,
-    badgeClass: 'text-red-400 bg-red-900/30 border-red-800/30',
-  },
-};
-
 interface ParticipantWithStats extends Profile {
   match_prediction_count?: number;
+  advancing_prediction_count?: number;
+  award_prediction_count?: number;
 }
 
 export default function UsuariosPage() {
@@ -49,17 +33,45 @@ export default function UsuariosPage() {
           .select('user_id')
           .in('user_id', userIds);
 
-        const countMap: Record<string, number> = {};
+        const matchCountMap: Record<string, number> = {};
         if (predCounts) {
           for (const pred of predCounts) {
-            countMap[pred.user_id] = (countMap[pred.user_id] ?? 0) + 1;
+            matchCountMap[pred.user_id] = (matchCountMap[pred.user_id] ?? 0) + 1;
+          }
+        }
+
+        // Fetch advancing prediction counts
+        const { data: advCounts } = await supabase
+          .from('advancing_predictions')
+          .select('user_id')
+          .in('user_id', userIds);
+
+        const advCountMap: Record<string, number> = {};
+        if (advCounts) {
+          for (const pred of advCounts) {
+            advCountMap[pred.user_id] = (advCountMap[pred.user_id] ?? 0) + 1;
+          }
+        }
+
+        // Fetch award prediction counts
+        const { data: awardCounts } = await supabase
+          .from('award_predictions')
+          .select('user_id')
+          .in('user_id', userIds);
+
+        const awardCountMap: Record<string, number> = {};
+        if (awardCounts) {
+          for (const pred of awardCounts) {
+            awardCountMap[pred.user_id] = (awardCountMap[pred.user_id] ?? 0) + 1;
           }
         }
 
         setParticipants(
           data.map((p) => ({
             ...p,
-            match_prediction_count: countMap[p.id] ?? 0,
+            match_prediction_count: matchCountMap[p.id] ?? 0,
+            advancing_prediction_count: advCountMap[p.id] ?? 0,
+            award_prediction_count: awardCountMap[p.id] ?? 0,
           }))
         );
       }
@@ -92,9 +104,6 @@ export default function UsuariosPage() {
       {!loading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {participants.map((p) => {
-            const config = statusConfig[p.payment_status] ?? statusConfig.pending;
-            const StatusIcon = config.icon;
-
             return (
               <Link
                 key={p.id}
@@ -111,24 +120,6 @@ export default function UsuariosPage() {
                     </div>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-700 group-hover:text-gold-400 transition-colors shrink-0 mt-1" />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  {/* Payment badge */}
-                  <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium ${config.badgeClass}`}>
-                    <StatusIcon className="w-3 h-3" />
-                    {config.label}
-                  </div>
-
-                  {/* Prediction indicator */}
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${
-                      (p.match_prediction_count ?? 0) > 0 ? 'bg-emerald-500' : 'bg-gray-700'
-                    }`} />
-                    <span className="text-xs text-gray-500">
-                      {(p.match_prediction_count ?? 0) > 0 ? 'Con predicciones' : 'Sin predicciones'}
-                    </span>
-                  </div>
                 </div>
               </Link>
             );

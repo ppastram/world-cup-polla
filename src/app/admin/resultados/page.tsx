@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, RefreshCw, Loader2, CheckCircle } from "lucide-react";
+import { Save, RefreshCw, Loader2, CheckCircle, Plus, Minus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import type { Match, Team } from "@/lib/types";
+import type { Match, Team, ActualAdvancing } from "@/lib/types";
 import { STAGES_LABELS } from "@/lib/constants";
 
 type MatchWithTeams = Match & { home_team: Team; away_team: Team };
 
 export default function AdminResultadosPage() {
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
+  const [allTeams, setAllTeams] = useState<Team[]>([]);
+  const [advancing, setAdvancing] = useState<ActualAdvancing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState<string | null>(null);
   const [savingAll, setSavingAll] = useState(false);
   const [saveAllMessage, setSaveAllMessage] = useState<string | null>(null);
   const [stageFilter, setStageFilter] = useState("group");
   const [scores, setScores] = useState<Record<string, { home: string; away: string }>>({});
+  const [teamAssignments, setTeamAssignments] = useState<Record<string, { home: string; away: string }>>({});
 
   useEffect(() => {
     fetchMatches();
@@ -23,93 +25,56 @@ export default function AdminResultadosPage() {
 
   async function fetchMatches() {
     const supabase = createClient();
-    const { data } = await supabase
-      .from("matches")
-      .select("*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)")
-      .order("match_date", { ascending: true });
+    const [matchesRes, teamsRes, advancingRes] = await Promise.all([
+      supabase
+        .from("matches")
+        .select("*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)")
+        .order("match_date", { ascending: true }),
+      supabase.from("teams").select("*").order("name"),
+      supabase.from("actual_advancing").select("*"),
+    ]);
 
-    if (data) {
+    if (teamsRes.data) setAllTeams(teamsRes.data as Team[]);
+    if (advancingRes.data) setAdvancing(advancingRes.data as ActualAdvancing[]);
+
+    if (matchesRes.data) {
+      const data = matchesRes.data;
       setMatches(data as MatchWithTeams[]);
       const initialScores: Record<string, { home: string; away: string }> = {};
+      const initialAssignments: Record<string, { home: string; away: string }> = {};
       data.forEach((m) => {
         initialScores[m.id] = {
           home: m.home_score?.toString() ?? "",
           away: m.away_score?.toString() ?? "",
         };
+        initialAssignments[m.id] = {
+          home: m.home_team_id ?? "",
+          away: m.away_team_id ?? "",
+        };
       });
       setScores(initialScores);
+      setTeamAssignments(initialAssignments);
     }
     setLoading(false);
   }
 
-  async function saveResult(matchId: string) {
-    const score = scores[matchId];
-    if (!score || score.home === "" || score.away === "") return;
-
-    setSaving(matchId);
-    const supabase = createClient();
-
-    const homeScore = parseInt(score.home);
-    const awayScore = parseInt(score.away);
-
-    try {
-      // Update match
-      const { error: matchError } = await supabase
-        .from("matches")
-        .update({
-          home_score: homeScore,
-          away_score: awayScore,
-          status: "finished",
-          manual_override: true,
-        })
-        .eq("id", matchId);
-
-      if (matchError) {
-        alert(`Error al guardar partido: ${matchError.message}`);
-        setSaving(null);
-        return;
-      }
-
-      // Recalculate points for all predictions on this match
-      const { data: predictions } = await supabase
-        .from("match_predictions")
-        .select("*")
-        .eq("match_id", matchId);
-
-      if (predictions) {
-        for (const pred of predictions) {
-          let points = 0;
-          if (pred.home_score === homeScore && pred.away_score === awayScore) {
-            points = 5; // exact
-          } else {
-            const predDiff = pred.home_score - pred.away_score;
-            const actualDiff = homeScore - awayScore;
-            const predResult = Math.sign(predDiff);
-            const actualResult = Math.sign(actualDiff);
-            if (predResult === actualResult) {
-              points = predDiff === actualDiff ? 3 : 2;
-            }
-          }
-          const { error: predError } = await supabase
-            .from("match_predictions")
-            .update({ points_earned: points })
-            .eq("id", pred.id);
-
-          if (predError) {
-            console.error("Error updating prediction:", predError.message);
-          }
-        }
-      }
-
-      // Recalculate leaderboard
-      await supabase.rpc("recalculate_leaderboard");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Error desconocido";
-      alert(`Error al guardar: ${message}`);
+  function getTeamsForStage(stage: string): Team[] {
+    const advancingTeamIds = advancing
+      .filter((a) => a.round === stage)
+      .map((a) => a.team_id);
+    if (advancingTeamIds.length > 0) {
+      return allTeams.filter((t) => advancingTeamIds.includes(t.id));
     }
+    return allTeams;
+  }
 
-    setSaving(null);
-    fetchMatches();
+  function changeScore(matchId: string, side: "home" | "away", delta: number) {
+    setScores((prev) => {
+      const current = prev[matchId] || { home: "", away: "" };
+      const val = current[side] === "" ? 0 : parseInt(current[side]) || 0;
+      const clamped = Math.max(0, Math.min(20, val + delta));
+      return { ...prev, [matchId]: { ...current, [side]: clamped.toString() } };
+    });
   }
 
   async function triggerSync() {
@@ -129,7 +94,16 @@ export default function AdminResultadosPage() {
   async function saveAllResults() {
     const matchesToSave = filteredMatches.filter((m) => {
       const score = scores[m.id];
-      return score && score.home !== "" && score.away !== "";
+      const hasScores = score && score.home !== "" && score.away !== "";
+      // For knockout matches, also save if team assignments changed
+      if (m.stage !== "group") {
+        const assignment = teamAssignments[m.id];
+        const teamChanged =
+          assignment &&
+          (assignment.home !== (m.home_team_id ?? "") || assignment.away !== (m.away_team_id ?? ""));
+        return hasScores || teamChanged;
+      }
+      return hasScores;
     });
 
     if (matchesToSave.length === 0) return;
@@ -142,17 +116,31 @@ export default function AdminResultadosPage() {
     try {
       for (const match of matchesToSave) {
         const score = scores[match.id];
-        const homeScore = parseInt(score.home);
-        const awayScore = parseInt(score.away);
+        const homeScore = score.home !== "" ? parseInt(score.home) : null;
+        const awayScore = score.away !== "" ? parseInt(score.away) : null;
+
+        const updateData: Record<string, unknown> = {
+          home_score: homeScore,
+          away_score: awayScore,
+          manual_override: true,
+        };
+
+        if (homeScore !== null && awayScore !== null) {
+          updateData.status = "finished";
+        }
+
+        // For knockout matches, also update team assignments
+        if (match.stage !== "group") {
+          const assignment = teamAssignments[match.id];
+          if (assignment) {
+            updateData.home_team_id = assignment.home || null;
+            updateData.away_team_id = assignment.away || null;
+          }
+        }
 
         const { error: matchError } = await supabase
           .from("matches")
-          .update({
-            home_score: homeScore,
-            away_score: awayScore,
-            status: "finished",
-            manual_override: true,
-          })
+          .update(updateData)
           .eq("id", match.id);
 
         if (matchError) {
@@ -160,34 +148,12 @@ export default function AdminResultadosPage() {
           break;
         }
 
-        // Recalculate points for all predictions on this match
-        const { data: predictions } = await supabase
-          .from("match_predictions")
-          .select("*")
-          .eq("match_id", match.id);
-
-        if (predictions) {
-          for (const pred of predictions) {
-            let points = 0;
-            if (pred.home_score === homeScore && pred.away_score === awayScore) {
-              points = 5;
-            } else {
-              const predDiff = pred.home_score - pred.away_score;
-              const actualDiff = homeScore - awayScore;
-              const predResult = Math.sign(predDiff);
-              const actualResult = Math.sign(actualDiff);
-              if (predResult === actualResult) {
-                points = predDiff === actualDiff ? 3 : 2;
-              }
-            }
-            await supabase
-              .from("match_predictions")
-              .update({ points_earned: points })
-              .eq("id", pred.id);
-          }
-        }
         saved++;
       }
+
+      // Score ALL match predictions server-side (bypasses RLS)
+      const { error: scoreError } = await supabase.rpc("score_match_predictions");
+      if (scoreError) throw scoreError;
 
       await supabase.rpc("recalculate_leaderboard");
 
@@ -204,7 +170,14 @@ export default function AdminResultadosPage() {
     fetchMatches();
   }
 
-  const filteredMatches = matches.filter((m) => m.stage === stageFilter);
+  const filteredMatches = matches
+    .filter((m) => m.stage === stageFilter)
+    .sort((a, b) => {
+      const dateA = new Date(a.match_date).getTime();
+      const dateB = new Date(b.match_date).getTime();
+      if (dateA !== dateB) return dateA - dateB;
+      return a.match_number - b.match_number;
+    });
 
   if (loading) {
     return (
@@ -246,94 +219,172 @@ export default function AdminResultadosPage() {
 
       {/* Matches */}
       <div className="space-y-3">
-        {filteredMatches.map((match) => (
-          <div
-            key={match.id}
-            className={`bg-wc-card border rounded-xl p-4 ${
-              match.status === "finished" ? "border-emerald-500/30" : "border-wc-border"
-            }`}
-          >
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-gray-500 w-8">#{match.match_number}</span>
+        {filteredMatches.map((match) => {
+          const homeVal = scores[match.id]?.home ?? "";
+          const awayVal = scores[match.id]?.away ?? "";
+          const homeNum = homeVal === "" ? 0 : parseInt(homeVal) || 0;
+          const awayNum = awayVal === "" ? 0 : parseInt(awayVal) || 0;
+          const hasBoth = homeVal !== "" && awayVal !== "";
 
-              {/* Home Team */}
-              <div className="flex items-center gap-2 flex-1 justify-end">
-                <span className="text-sm text-white">{match.home_team?.name || "TBD"}</span>
-                {match.home_team && (
-                  <img src={match.home_team.flag_url} alt="" className="w-6 h-4 object-cover rounded" />
-                )}
-              </div>
+          return (
+            <div
+              key={match.id}
+              className={`bg-wc-card border rounded-lg p-3 transition-colors ${
+                match.status === "finished" ? "border-emerald-500/30" : hasBoth ? "border-gold-500/40" : "border-wc-border"
+              }`}
+            >
+              {/* Status badge */}
+              {match.status === "finished" && (
+                <div className="flex items-center gap-1 mb-2">
+                  <CheckCircle className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[10px] text-emerald-400 font-medium">Finalizado</span>
+                </div>
+              )}
 
-              {/* Score Inputs */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="20"
-                  value={scores[match.id]?.home ?? ""}
-                  onChange={(e) =>
-                    setScores((prev) => ({
-                      ...prev,
-                      [match.id]: { ...prev[match.id], home: e.target.value },
-                    }))
-                  }
-                  className="w-12 bg-wc-darker border border-wc-border rounded px-2 py-1 text-center text-white text-sm focus:outline-none focus:border-gold-500/50"
-                />
-                <span className="text-gray-500">-</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="20"
-                  value={scores[match.id]?.away ?? ""}
-                  onChange={(e) =>
-                    setScores((prev) => ({
-                      ...prev,
-                      [match.id]: { ...prev[match.id], away: e.target.value },
-                    }))
-                  }
-                  className="w-12 bg-wc-darker border border-wc-border rounded px-2 py-1 text-center text-white text-sm focus:outline-none focus:border-gold-500/50"
-                />
-              </div>
-
-              {/* Away Team */}
-              <div className="flex items-center gap-2 flex-1">
-                {match.away_team && (
-                  <img src={match.away_team.flag_url} alt="" className="w-6 h-4 object-cover rounded" />
-                )}
-                <span className="text-sm text-white">{match.away_team?.name || "TBD"}</span>
-              </div>
-
-              {/* Status & Save */}
-              <div className="flex items-center gap-2">
-                {match.status === "finished" && (
-                  <CheckCircle className="w-4 h-4 text-emerald-400" />
-                )}
-                <button
-                  onClick={() => saveResult(match.id)}
-                  disabled={saving === match.id}
-                  className="bg-gold-500 hover:bg-gold-600 text-black px-3 py-1 rounded text-xs font-bold transition-colors disabled:opacity-50"
-                >
-                  {saving === match.id ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+              <div className="flex items-center justify-between gap-2">
+                {/* Home Team */}
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {match.stage === "group" ? (
+                    <>
+                      {match.home_team && (
+                        <img src={match.home_team.flag_url} alt="" className="w-8 h-6 object-cover rounded-sm shrink-0 border border-wc-border" />
+                      )}
+                      <span className="text-sm text-gray-200 truncate">{match.home_team?.name || "TBD"}</span>
+                    </>
                   ) : (
-                    <Save className="w-3 h-3" />
+                    <>
+                      {teamAssignments[match.id]?.home && allTeams.find((t) => t.id === teamAssignments[match.id].home) && (
+                        <img src={allTeams.find((t) => t.id === teamAssignments[match.id].home)!.flag_url} alt="" className="w-8 h-6 object-cover rounded-sm shrink-0 border border-wc-border" />
+                      )}
+                      <select
+                        value={teamAssignments[match.id]?.home ?? ""}
+                        onChange={(e) =>
+                          setTeamAssignments((prev) => ({
+                            ...prev,
+                            [match.id]: { ...prev[match.id], home: e.target.value },
+                          }))
+                        }
+                        className="bg-wc-darker border border-wc-border rounded-md text-sm text-gray-200 px-2 py-1 min-w-0 flex-1 focus:outline-none focus:border-gold-500/50"
+                      >
+                        <option value="">TBD</option>
+                        {getTeamsForStage(match.stage).map((t) => (
+                          <option key={t.id} value={t.id}>{t.code} - {t.name}</option>
+                        ))}
+                      </select>
+                    </>
                   )}
-                </button>
+                </div>
+
+                {/* Score Controls */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => changeScore(match.id, "home", -1)}
+                    disabled={homeNum <= 0}
+                    className="w-8 h-8 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border text-gray-300 hover:bg-wc-border hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={homeVal}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? "" : Math.max(0, Math.min(20, parseInt(e.target.value) || 0)).toString();
+                      setScores((prev) => ({ ...prev, [match.id]: { ...prev[match.id], home: val } }));
+                    }}
+                    className={`w-9 h-9 text-center rounded-md bg-wc-darker border border-wc-border text-base font-bold tabular-nums focus:outline-none focus:border-gold-500/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${homeVal !== "" ? "text-gold-400" : "text-gray-500"}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => changeScore(match.id, "home", 1)}
+                    disabled={homeNum >= 20}
+                    className="w-8 h-8 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border text-gray-300 hover:bg-wc-border hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+
+                  <span className="text-gray-600 font-bold mx-1">-</span>
+
+                  <button
+                    type="button"
+                    onClick={() => changeScore(match.id, "away", -1)}
+                    disabled={awayNum <= 0}
+                    className="w-8 h-8 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border text-gray-300 hover:bg-wc-border hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    type="number"
+                    min="0"
+                    max="20"
+                    value={awayVal}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? "" : Math.max(0, Math.min(20, parseInt(e.target.value) || 0)).toString();
+                      setScores((prev) => ({ ...prev, [match.id]: { ...prev[match.id], away: val } }));
+                    }}
+                    className={`w-9 h-9 text-center rounded-md bg-wc-darker border border-wc-border text-base font-bold tabular-nums focus:outline-none focus:border-gold-500/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${awayVal !== "" ? "text-gold-400" : "text-gray-500"}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => changeScore(match.id, "away", 1)}
+                    disabled={awayNum >= 20}
+                    className="w-8 h-8 flex items-center justify-center rounded-md bg-wc-darker border border-wc-border text-gray-300 hover:bg-wc-border hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Away Team */}
+                <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                  {match.stage === "group" ? (
+                    <>
+                      <span className="text-sm text-gray-200 truncate">{match.away_team?.name || "TBD"}</span>
+                      {match.away_team && (
+                        <img src={match.away_team.flag_url} alt="" className="w-8 h-6 object-cover rounded-sm shrink-0 border border-wc-border" />
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <select
+                        value={teamAssignments[match.id]?.away ?? ""}
+                        onChange={(e) =>
+                          setTeamAssignments((prev) => ({
+                            ...prev,
+                            [match.id]: { ...prev[match.id], away: e.target.value },
+                          }))
+                        }
+                        className="bg-wc-darker border border-wc-border rounded-md text-sm text-gray-200 px-2 py-1 min-w-0 flex-1 text-right focus:outline-none focus:border-gold-500/50"
+                      >
+                        <option value="">TBD</option>
+                        {getTeamsForStage(match.stage).map((t) => (
+                          <option key={t.id} value={t.id}>{t.code} - {t.name}</option>
+                        ))}
+                      </select>
+                      {teamAssignments[match.id]?.away && allTeams.find((t) => t.id === teamAssignments[match.id].away) && (
+                        <img src={allTeams.find((t) => t.id === teamAssignments[match.id].away)!.flag_url} alt="" className="w-8 h-6 object-cover rounded-sm shrink-0 border border-wc-border" />
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-2 text-xs text-gray-600">
+                <span className="text-gray-500">#{match.match_number}</span>
+                {" · "}
+                {new Date(match.match_date).toLocaleDateString("es-CO", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+                {match.venue && ` · ${match.venue}`}
               </div>
             </div>
-
-            <div className="mt-2 text-xs text-gray-600">
-              {new Date(match.match_date).toLocaleDateString("es-CO", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-              {match.venue && ` · ${match.venue}`}
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {filteredMatches.length === 0 && (
           <p className="text-center text-gray-500 py-10">No hay partidos en esta fase</p>
