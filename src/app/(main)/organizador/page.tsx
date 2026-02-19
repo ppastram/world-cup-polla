@@ -4,26 +4,32 @@ import { useState, useEffect } from 'react';
 import { UserCheck, Phone, Mail, Send, Newspaper, Loader2, Trash2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import { useTranslation } from '@/i18n';
 import type { BlogPost } from '@/lib/types';
 
-function timeAgo(dateStr: string): string {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+function useTimeAgo() {
+  const { t } = useTranslation();
+  return (dateStr: string): string => {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (seconds < 60) return 'hace un momento';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `hace ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `hace ${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `hace ${days}d`;
-  const months = Math.floor(days / 30);
-  return `hace ${months} mes${months > 1 ? 'es' : ''}`;
+    if (seconds < 60) return t('timeAgo.justNow');
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return t('timeAgo.minutes', { n: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('timeAgo.hours', { n: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 30) return t('timeAgo.days', { n: days });
+    const months = Math.floor(days / 30);
+    return t('timeAgo.months', { n: months, s: months > 1 ? 's' : '' });
+  };
 }
 
 export default function OrganizadorPage() {
   const { user, profile } = useUser();
+  const { t } = useTranslation();
+  const timeAgo = useTimeAgo();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [title, setTitle] = useState('');
@@ -85,8 +91,8 @@ export default function OrganizadorPage() {
       <div className="flex items-center gap-3">
         <UserCheck className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Organizador</h1>
-          <p className="text-sm text-gray-500">Ampolla Mundialista 2026</p>
+          <h1 className="text-2xl font-bold text-white">{t('organizer.title')}</h1>
+          <p className="text-sm text-gray-500">{t('organizer.subtitle')}</p>
         </div>
       </div>
 
@@ -100,21 +106,16 @@ export default function OrganizadorPage() {
           />
           <div>
             <p className="text-lg font-bold text-white">Pablo Pastrana</p>
-            <p className="text-sm text-gray-500">Organizador</p>
+            <p className="text-sm text-gray-500">{t('organizer.role')}</p>
           </div>
         </div>
 
         <p className="text-sm text-gray-400 leading-relaxed">
-          Soy Pablo y quise organizar esta ampolla para ponerle emoción al mundial con amigos y familia.
-          Le metí amor a hacer una página linda y fácil de usar para que sea bacano seguir la polla y podamos
-          hacer fuerza a favor de nuestras apuestas (y en contra de las de los demás!) en tiempo real (y porque sacarle
-          el jugo a la carrera...).
+          {t('organizer.bio')}
           <br/> <br/>
-          Inviten a amigos, vecinos, familiares, vecinos, novias, mozas, etc para que el premio crezca. Les dejo mi
-          teléfono y correo para que me cuenten si tienen cualquier queja, sugerencia o reclamo. Estaré administrando
-          también los pagos y asegurando que todo funcione correctamente.
-
-          Estaré participando con el usuario &ldquo;paulo&rdquo;, así que por ahí nos vemos!
+          {t('organizer.bio2')}
+          {' '}
+          {t('organizer.bio3')}
         </p>
 
         {/* Contact Info */}
@@ -127,7 +128,7 @@ export default function OrganizadorPage() {
               <Phone className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Telefono / WhatsApp</p>
+              <p className="text-xs text-gray-500">{t('organizer.phone')}</p>
               <p className="text-sm font-medium text-gray-200 group-hover:text-gold-400 transition-colors">
                 316 323 5264
               </p>
@@ -142,7 +143,7 @@ export default function OrganizadorPage() {
               <Mail className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <p className="text-xs text-gray-500">Correo electronico</p>
+              <p className="text-xs text-gray-500">{t('organizer.email')}</p>
               <p className="text-sm font-medium text-gray-200 group-hover:text-gold-400 transition-colors">
                 ppastram@hotmail.com
               </p>
@@ -155,7 +156,7 @@ export default function OrganizadorPage() {
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <Newspaper className="w-6 h-6 text-gold-400" />
-          <h2 className="text-xl font-bold text-white">Novedades</h2>
+          <h2 className="text-xl font-bold text-white">{t('organizer.news')}</h2>
         </div>
 
         {/* Admin: Create Post Form */}
@@ -165,14 +166,14 @@ export default function OrganizadorPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Titulo de la novedad"
+              placeholder={t('organizer.newsTitle')}
               className="w-full bg-wc-darker border border-wc-border rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 text-sm"
               required
             />
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="Escribe la novedad..."
+              placeholder={t('organizer.newsContent')}
               rows={3}
               className="w-full bg-wc-darker border border-wc-border rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 text-sm resize-none"
               required
@@ -183,7 +184,7 @@ export default function OrganizadorPage() {
               className="bg-gold-500 hover:bg-gold-600 text-black font-bold py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Publicar
+              {t('organizer.publish')}
             </button>
           </form>
         )}
@@ -195,7 +196,7 @@ export default function OrganizadorPage() {
           </div>
         ) : posts.length === 0 ? (
           <div className="bg-wc-card border border-wc-border rounded-xl p-6 text-center">
-            <p className="text-gray-500 text-sm">No hay novedades aun.</p>
+            <p className="text-gray-500 text-sm">{t('organizer.noNews')}</p>
           </div>
         ) : (
           <div className="space-y-3">

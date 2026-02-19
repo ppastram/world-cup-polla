@@ -6,6 +6,7 @@ import { useUser } from '@/hooks/useUser';
 import { PREDICTION_DEADLINE } from '@/lib/constants';
 import { calculateGroupStandings } from '@/lib/group-standings';
 import type { Team, Match, AwardType } from '@/lib/types';
+import { useTranslation } from '@/i18n';
 
 import CountdownTimer from '@/components/shared/CountdownTimer';
 import PaymentBanner from '@/components/shared/PaymentBanner';
@@ -24,6 +25,7 @@ const GROUP_STEPS: string[][] = [
 
 export default function PrediccionesPage() {
   const { user, profile, loading: userLoading } = useUser();
+  const { t } = useTranslation();
   const supabase = createClient();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -49,33 +51,28 @@ export default function PrediccionesPage() {
     async function fetchData() {
       setLoading(true);
 
-      // Fetch teams
       const { data: teamsData } = await supabase
         .from('teams')
         .select('*')
         .order('group_letter', { ascending: true })
         .order('name', { ascending: true });
 
-      // Fetch group stage matches with joined teams
       const { data: matchesData } = await supabase
         .from('matches')
         .select('*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
         .eq('stage', 'group')
         .order('match_date', { ascending: true });
 
-      // Fetch user's match predictions
       const { data: matchPreds } = await supabase
         .from('match_predictions')
         .select('*')
         .eq('user_id', user!.id);
 
-      // Fetch user's advancing predictions
       const { data: advancingPreds } = await supabase
         .from('advancing_predictions')
         .select('*')
         .eq('user_id', user!.id);
 
-      // Fetch user's award predictions
       const { data: awardPreds } = await supabase
         .from('award_predictions')
         .select('*')
@@ -84,7 +81,6 @@ export default function PrediccionesPage() {
       if (teamsData) setTeams(teamsData);
       if (matchesData) setMatches(matchesData);
 
-      // Build match predictions map
       if (matchPreds) {
         const map: Record<string, { home: number; away: number; pointsEarned?: number | null }> = {};
         for (const p of matchPreds) {
@@ -93,9 +89,6 @@ export default function PrediccionesPage() {
         setMatchPredictions(map);
       }
 
-      // Build advancing predictions map + points map
-      // Trust the DB: points_earned is set by score_advancing_predictions() RPC.
-      // NULL = not yet scored, 0 = wrong, positive = correct.
       if (advancingPreds) {
         const map: Record<string, string[]> = {};
         const pointsMap: Record<string, Record<string, number | null>> = {};
@@ -112,9 +105,6 @@ export default function PrediccionesPage() {
         setAdvancingPoints(pointsMap);
       }
 
-      // Build award predictions map
-      // Trust the DB: points_earned is set by score_award_predictions() RPC.
-      // NULL = not yet scored, 0+ = scored.
       if (awardPreds) {
         const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }> = {};
         for (const p of awardPreds) {
@@ -133,7 +123,6 @@ export default function PrediccionesPage() {
     fetchData();
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Handlers
   const handleMatchPredictionChange = useCallback((matchId: string, home: number, away: number) => {
     setMatchPredictions((prev) => ({ ...prev, [matchId]: { home, away } }));
   }, []);
@@ -149,15 +138,12 @@ export default function PrediccionesPage() {
     []
   );
 
-  // Auto-compute round_32 from group predictions
   const autoRound32 = useMemo(() => {
     if (teams.length === 0 || matches.length === 0) return [];
     const result = calculateGroupStandings(teams, matches, matchPredictions);
     return result.allQualified;
   }, [teams, matches, matchPredictions]);
 
-
-  // Save ALL predictions across all steps
   const handleSave = useCallback(async () => {
     if (!user || isPastDeadline) return;
 
@@ -165,7 +151,6 @@ export default function PrediccionesPage() {
     setSaveMessage(null);
 
     try {
-      // 1. Save ALL match predictions (steps 0-2)
       const matchUpserts = matches
         .filter((m) => matchPredictions[m.id])
         .map((m) => ({
@@ -182,7 +167,6 @@ export default function PrediccionesPage() {
         if (error) throw error;
       }
 
-      // 2. Save advancing predictions (step 3)
       if (autoRound32.length > 0) {
         const advUpserts: { user_id: string; team_id: string; round: string }[] = [];
         for (const teamId of autoRound32) {
@@ -200,8 +184,6 @@ export default function PrediccionesPage() {
           }
         }
         if (advUpserts.length > 0) {
-          // Delete all old advancing predictions first to remove stale entries
-          // (upsert alone doesn't remove teams no longer in the selection)
           const { error: delError } = await supabase
             .from('advancing_predictions')
             .delete()
@@ -215,7 +197,6 @@ export default function PrediccionesPage() {
         }
       }
 
-      // 3. Save award predictions (step 4)
       const awardUpserts: {
         user_id: string;
         award_type: AwardType;
@@ -237,10 +218,9 @@ export default function PrediccionesPage() {
         if (error) throw error;
       }
 
-      setSaveMessage('Guardado exitosamente');
+      setSaveMessage(t('predictions.savedSuccess'));
       setTimeout(() => setSaveMessage(null), 3000);
 
-      // Check if 100% complete → send email receipt
       const groupMatchTotal = matches.filter((m) => m.stage === 'group' && m.home_team && m.away_team).length;
       const matchCount = Object.keys(matchPredictions).length;
       const manualAdv = ['round_16', 'quarter', 'semi', 'final', 'third_place', 'champion'].reduce(
@@ -261,20 +241,18 @@ export default function PrediccionesPage() {
             body: JSON.stringify({ userId: user.id }),
           });
         } catch (emailErr) {
-          // Email is best-effort — don't block the save
           console.error('Failed to send predictions email:', emailErr);
         }
       }
     } catch (err) {
       console.error('Error saving predictions:', err);
-      setSaveMessage('Error al guardar. Intenta de nuevo.');
+      setSaveMessage(t('predictions.saveError'));
       setTimeout(() => setSaveMessage(null), 4000);
     } finally {
       setSaving(false);
     }
-  }, [user, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32]);
+  }, [user, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32, t]);
 
-  // Completion stats
   const groupMatchCount = matches.filter(
     (m) => m.stage === 'group' && m.home_team && m.away_team
   ).length;
@@ -284,23 +262,21 @@ export default function PrediccionesPage() {
     0
   );
   const advancingCount = autoRound32.length + manualAdvancingCount;
-  const totalAdvancingExpected = 32 + 16 + 8 + 4 + 2 + 1 + 1; // 64
+  const totalAdvancingExpected = 32 + 16 + 8 + 4 + 2 + 1 + 1;
   const filledAwards = Object.values(awardPredictions).filter(
     (v) => v.player_name?.trim() || v.total_goals_guess != null
   ).length;
 
-  // Progress percentage
   const totalItems = groupMatchCount + totalAdvancingExpected + 5;
   const completedItems = predictedMatchCount + advancingCount + filledAwards;
   const progressPct = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-  // Loading state
   if (userLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-gold-400 mx-auto" />
-          <p className="text-gray-400 text-sm">Cargando predicciones...</p>
+          <p className="text-gray-400 text-sm">{t('predictions.loading')}</p>
         </div>
       </div>
     );
@@ -311,9 +287,9 @@ export default function PrediccionesPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center space-y-4 max-w-md">
           <Lock className="w-10 h-10 text-gray-500 mx-auto" />
-          <h2 className="text-xl font-bold text-white">Inicia sesion</h2>
+          <h2 className="text-xl font-bold text-white">{t('predictions.loginRequired')}</h2>
           <p className="text-gray-400 text-sm">
-            Debes iniciar sesion para hacer tus predicciones.
+            {t('predictions.loginRequiredDesc')}
           </p>
         </div>
       </div>
@@ -322,34 +298,29 @@ export default function PrediccionesPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Mis Predicciones</h1>
-        <p className="text-gray-400 text-sm">Mundial FIFA 2026</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">{t('predictions.title')}</h1>
+        <p className="text-gray-400 text-sm">{t('predictions.subtitle')}</p>
       </div>
 
-      {/* Payment Banner */}
       {profile && <PaymentBanner paymentStatus={profile.payment_status} />}
 
-      {/* Countdown */}
       {!isPastDeadline && (
-        <CountdownTimer targetDate={PREDICTION_DEADLINE} label="Tiempo restante para enviar predicciones" />
+        <CountdownTimer targetDate={PREDICTION_DEADLINE} label={t('predictions.timeRemaining')} />
       )}
 
-      {/* Deadline passed warning */}
       {isPastDeadline && (
         <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-3 flex items-center gap-3">
           <Lock className="w-5 h-5 text-red-400 shrink-0" />
           <p className="text-sm text-red-300">
-            El plazo para enviar predicciones ha finalizado. Ya no puedes editar.
+            {t('predictions.deadlinePassed')}
           </p>
         </div>
       )}
 
-      {/* Progress Bar */}
       <div className="bg-wc-card border border-wc-border rounded-lg p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-300">Progreso general</span>
+          <span className="text-sm font-medium text-gray-300">{t('predictions.overallProgress')}</span>
           <span className="text-sm font-bold text-gold-400">{progressPct}%</span>
         </div>
         <div className="w-full bg-wc-darker rounded-full h-2.5 overflow-hidden">
@@ -363,24 +334,23 @@ export default function PrediccionesPage() {
             <span className={predictedMatchCount === groupMatchCount ? 'text-gold-400' : 'text-gray-400'}>
               {predictedMatchCount}/{groupMatchCount}
             </span>{' '}
-            partidos
+            {t('predictions.matchesCount')}
           </span>
           <span>
             <span className={advancingCount === totalAdvancingExpected ? 'text-gold-400' : 'text-gray-400'}>
               {advancingCount}/{totalAdvancingExpected}
             </span>{' '}
-            clasificados
+            {t('predictions.advancingCount')}
           </span>
           <span>
             <span className={filledAwards === 5 ? 'text-gold-400' : 'text-gray-400'}>
               {filledAwards}/5
             </span>{' '}
-            premios
+            {t('predictions.awardsCount')}
           </span>
         </div>
       </div>
 
-      {/* Stepper */}
       <PredictionStepper
         currentStep={currentStep}
         totalSteps={totalSteps}
@@ -389,23 +359,21 @@ export default function PrediccionesPage() {
         saving={saving}
       />
 
-      {/* Save message */}
       {saveMessage && (
         <div
           className={`text-center text-sm py-2 px-4 rounded-lg ${
-            saveMessage.includes('Error')
+            saveMessage.includes('Error') || saveMessage.includes('error')
               ? 'bg-red-900/30 text-red-300 border border-red-700/50'
               : 'bg-emerald-900/30 text-emerald-300 border border-emerald-700/50'
           }`}
         >
           <div className="flex items-center justify-center gap-2">
-            {!saveMessage.includes('Error') && <CheckCircle2 className="w-4 h-4" />}
+            {!saveMessage.includes('Error') && !saveMessage.includes('error') && <CheckCircle2 className="w-4 h-4" />}
             {saveMessage}
           </div>
         </div>
       )}
 
-      {/* Step Content */}
       <div className="min-h-[400px]">
         {currentStep <= 2 && (
           <GroupStageForm

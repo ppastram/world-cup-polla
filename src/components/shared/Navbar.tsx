@@ -20,27 +20,31 @@ import {
   ChevronDown,
   MoreHorizontal,
 } from "lucide-react";
+import { Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/hooks/useUser";
+import { useTranslation } from "@/i18n";
+import type { TranslationKey } from "@/i18n";
 import MascotAvatar from "@/components/shared/MascotAvatar";
 
-const mainNavItems = [
-  { href: "/predicciones", label: "Predicciones", icon: ClipboardList },
-  { href: "/clasificacion", label: "Clasificación", icon: Trophy },
-  { href: "/usuarios", label: "Participantes", icon: Users },
-  { href: "/reglas", label: "Reglas", icon: BookOpen },
-  { href: "/organizador", label: "Organizador", icon: UserCheck },
+const mainNavItems: { href: string; labelKey: TranslationKey; icon: typeof Trophy }[] = [
+  { href: "/predicciones", labelKey: "nav.predictions", icon: ClipboardList },
+  { href: "/clasificacion", labelKey: "nav.leaderboard", icon: Trophy },
+  { href: "/usuarios", labelKey: "nav.participants", icon: Users },
+  { href: "/reglas", labelKey: "nav.rules", icon: BookOpen },
+  { href: "/organizador", labelKey: "nav.organizer", icon: UserCheck },
 ];
 
-const moreNavItems = [
-  { href: "/partidos", label: "Partidos", icon: Calendar },
-  { href: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
+const moreNavItems: { href: string; labelKey: TranslationKey; icon: typeof Trophy }[] = [
+  { href: "/partidos", labelKey: "nav.matches", icon: Calendar },
+  { href: "/estadisticas", labelKey: "nav.stats", icon: BarChart3 },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, loading } = useUser();
+  const { t, locale, setLocale } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [hasUnreadPosts, setHasUnreadPosts] = useState(false);
@@ -124,7 +128,7 @@ export default function Navbar() {
             className="flex items-center gap-2 text-gold-400 font-bold text-lg"
           >
             <img src="/wc-logo-minimalist.jpeg" alt="WC 2026" className="w-8 h-8 rounded-sm" />
-            <span className="hidden sm:inline">Ampolla Mundialista</span>
+            <span className="hidden sm:inline">{t('nav.brand')}</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -144,7 +148,7 @@ export default function Navbar() {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  {item.label}
+                  {t(item.labelKey)}
                   {showDot && (
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                   )}
@@ -163,7 +167,7 @@ export default function Navbar() {
                 }`}
               >
                 <MoreHorizontal className="w-4 h-4" />
-                Más
+                {t('nav.more')}
                 <ChevronDown className={`w-3 h-3 transition-transform ${moreOpen ? "rotate-180" : ""}`} />
               </button>
               {moreOpen && (
@@ -183,7 +187,7 @@ export default function Navbar() {
                         }`}
                       >
                         <Icon className="w-4 h-4" />
-                        {item.label}
+                        {t(item.labelKey)}
                       </Link>
                     );
                   })}
@@ -194,6 +198,14 @@ export default function Navbar() {
 
           {/* User Menu */}
           <div className="hidden md:flex items-center gap-2">
+            <button
+              onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+              className="flex items-center gap-1.5 text-gray-400 hover:text-white px-2 py-2 rounded-lg text-xs font-medium hover:bg-white/5 transition-colors"
+              title={locale === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+            >
+              <Globe className="w-4 h-4" />
+              {locale === 'es' ? 'EN' : 'ES'}
+            </button>
             {profile?.is_admin && (
               <Link
                 href="/admin/resultados"
@@ -208,7 +220,7 @@ export default function Navbar() {
             >
               <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name || ''} size="sm" />
               <span className="max-w-[120px] truncate">
-                {profile?.display_name || "Perfil"}
+                {profile?.display_name || t('nav.profile')}
               </span>
             </Link>
             <button
@@ -249,7 +261,7 @@ export default function Navbar() {
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.label}
+                  {t(item.labelKey)}
                   {showDot && (
                     <span className="w-2 h-2 bg-red-500 rounded-full ml-auto" />
                   )}
@@ -263,7 +275,7 @@ export default function Navbar() {
               className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5"
             >
               <CreditCard className="w-5 h-5" />
-              Pago
+              {t('nav.payment')}
             </Link>
             <Link
               href="/perfil"
@@ -271,7 +283,7 @@ export default function Navbar() {
               className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5"
             >
               <User className="w-5 h-5" />
-              {profile?.display_name || "Perfil"}
+              {profile?.display_name || t('nav.profile')}
             </Link>
             {profile?.is_admin && (
               <Link
@@ -284,11 +296,18 @@ export default function Navbar() {
               </Link>
             )}
             <button
+              onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+              className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 w-full"
+            >
+              <Globe className="w-5 h-5" />
+              {locale === 'es' ? 'English' : 'Español'}
+            </button>
+            <button
               onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-red-400 hover:bg-white/5 w-full"
             >
               <LogOut className="w-5 h-5" />
-              Cerrar sesión
+              {t('nav.logout')}
             </button>
           </div>
         </div>

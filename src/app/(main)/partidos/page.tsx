@@ -4,21 +4,23 @@ import { useEffect, useState } from 'react';
 import { Calendar, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { createClient } from '@/lib/supabase/client';
+import { useTranslation } from '@/i18n';
 
 import MatchCard from '@/components/matches/MatchCard';
 import type { Match, Team, MatchStage } from '@/lib/types';
 
 type MatchWithTeams = Match & { home_team?: Team; away_team?: Team };
 
-const STAGE_TABS: { key: MatchStage | 'all'; label: string }[] = [
-  { key: 'all', label: 'Todos' },
-  { key: 'group', label: 'Grupos' },
-  { key: 'round_32', label: 'Dieciseisavos' },
-  { key: 'round_16', label: 'Octavos' },
-  { key: 'quarter', label: 'Cuartos' },
-  { key: 'semi', label: 'Semis' },
-  { key: 'final', label: 'Final' },
+const STAGE_TABS: { key: MatchStage | 'all'; labelKey: string }[] = [
+  { key: 'all', labelKey: 'matches.all' },
+  { key: 'group', labelKey: 'matches.groups' },
+  { key: 'round_32', labelKey: 'matches.round32' },
+  { key: 'round_16', labelKey: 'matches.round16' },
+  { key: 'quarter', labelKey: 'matches.quarter' },
+  { key: 'semi', labelKey: 'matches.semi' },
+  { key: 'final', labelKey: 'matches.final' },
 ];
 
 function groupMatchesByDate(matches: MatchWithTeams[]): Record<string, MatchWithTeams[]> {
@@ -32,6 +34,7 @@ function groupMatchesByDate(matches: MatchWithTeams[]): Record<string, MatchWith
 }
 
 export default function PartidosPage() {
+  const { t, locale } = useTranslation();
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStage, setActiveStage] = useState<MatchStage | 'all'>('all');
@@ -69,8 +72,8 @@ export default function PartidosPage() {
       <div className="flex items-center gap-3">
         <Calendar className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Partidos</h1>
-          <p className="text-sm text-gray-500">Calendario del Mundial 2026</p>
+          <h1 className="text-2xl font-bold text-white">{t("matches.title")}</h1>
+          <p className="text-sm text-gray-500">{t("matches.subtitle")}</p>
         </div>
       </div>
 
@@ -86,7 +89,7 @@ export default function PartidosPage() {
                 : 'bg-wc-card border border-wc-border text-gray-400 hover:text-white hover:border-wc-border'
             }`}
           >
-            {tab.label}
+            {t(tab.labelKey as Parameters<typeof t>[0])}
           </button>
         ))}
       </div>
@@ -102,7 +105,7 @@ export default function PartidosPage() {
       {!loading && filteredMatches.length === 0 && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <Calendar className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500">No hay partidos para esta fase.</p>
+          <p className="text-gray-500">{t("matches.empty")}</p>
         </div>
       )}
 
@@ -115,7 +118,7 @@ export default function PartidosPage() {
             <div key={dateKey}>
               <div className="sticky top-16 z-10 bg-wc-darker/90 backdrop-blur-sm py-2 mb-3">
                 <h2 className="text-sm font-semibold text-gold-400 uppercase tracking-wider">
-                  {format(dateObj, "EEEE d 'de' MMMM", { locale: es })}
+                  {format(dateObj, locale === 'es' ? "EEEE d 'de' MMMM" : "EEEE, MMMM d", { locale: locale === 'es' ? es : enUS })}
                 </h2>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

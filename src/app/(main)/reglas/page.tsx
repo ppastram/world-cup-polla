@@ -17,6 +17,7 @@ import {
   ENTRY_FEE_COP,
   NEQUI_NUMBER,
 } from '@/lib/constants';
+import { useTranslation } from '@/i18n';
 
 function ScoringTable({
   title,
@@ -70,196 +71,165 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 }
 
 export default function ReglasPage() {
+  const { t, formatCurrency } = useTranslation();
+
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
-      {/* Page Header */}
       <div className="flex items-center gap-3">
         <BookOpen className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Reglas</h1>
-          <p className="text-sm text-gray-500">Todo lo que necesitas saber</p>
+          <h1 className="text-2xl font-bold text-white">{t('rules.title')}</h1>
+          <p className="text-sm text-gray-500">{t('rules.subtitle')}</p>
         </div>
       </div>
 
-      {/* Scoring - Matches */}
       <ScoringTable
-        title="Prediccion de Partidos"
+        title={t('rules.matchPrediction')}
         icon={Target}
         rows={[
-          { label: 'Marcador exacto (ej: 2-1 y el resultado es 2-1)', points: SCORING.EXACT_SCORE },
-          { label: 'Resultado correcto + diferencia de goles exacta', points: SCORING.CORRECT_RESULT_AND_DIFF },
-          { label: 'Resultado correcto (Victoria/Empate/Derrota)', points: SCORING.CORRECT_RESULT },
+          { label: t('rules.exactScore'), points: SCORING.EXACT_SCORE },
+          { label: t('rules.resultAndDiff'), points: SCORING.CORRECT_RESULT_AND_DIFF },
+          { label: t('rules.correctResult'), points: SCORING.CORRECT_RESULT },
         ]}
       />
 
-      {/* Scoring - Advancing */}
       <ScoringTable
-        title="Equipos Clasificados"
+        title={t('rules.advancingTeams')}
         icon={Trophy}
         rows={[
-          { label: 'Acertar equipo en Dieciseisavos de Final', points: SCORING.ROUND_32 },
-          { label: 'Acertar equipo en Octavos de Final', points: SCORING.ROUND_16 },
-          { label: 'Acertar equipo en Cuartos de Final', points: SCORING.QUARTER },
-          { label: 'Acertar equipo en Semifinales', points: SCORING.SEMI },
-          { label: 'Acertar equipo en la Final', points: SCORING.FINAL },
-          { label: 'Acertar al ganador del Tercer Puesto', points: SCORING.THIRD_PLACE },
-          { label: 'Acertar al Campeon', points: SCORING.CHAMPION },
+          { label: t('rules.advRound32'), points: SCORING.ROUND_32 },
+          { label: t('rules.advRound16'), points: SCORING.ROUND_16 },
+          { label: t('rules.advQuarter'), points: SCORING.QUARTER },
+          { label: t('rules.advSemi'), points: SCORING.SEMI },
+          { label: t('rules.advFinal'), points: SCORING.FINAL },
+          { label: t('rules.advThirdPlace'), points: SCORING.THIRD_PLACE },
+          { label: t('rules.advChampion'), points: SCORING.CHAMPION },
         ]}
       />
 
-      {/* Scoring - Awards */}
       <ScoringTable
-        title="Premios Individuales"
+        title={t('rules.individualAwards')}
         icon={Star}
         rows={[
-          { label: 'Acertar Balon de Oro (MVP)', points: SCORING.GOLDEN_BALL },
-          { label: 'Acertar Bota de Oro (goleador)', points: SCORING.GOLDEN_BOOT },
-          { label: 'Acertar Guante de Oro (mejor portero)', points: SCORING.GOLDEN_GLOVE },
-          { label: 'Acertar Mejor Jugador Joven', points: SCORING.BEST_YOUNG },
-          { label: 'Total de goles del torneo - exacto', points: SCORING.TOTAL_GOALS_EXACT },
-          { label: 'Total de goles del torneo - dentro de 3', points: SCORING.TOTAL_GOALS_WITHIN_3 },
-          { label: 'Total de goles del torneo - dentro de 5', points: SCORING.TOTAL_GOALS_WITHIN_5 },
+          { label: t('rules.awardGoldenBall'), points: SCORING.GOLDEN_BALL },
+          { label: t('rules.awardGoldenBoot'), points: SCORING.GOLDEN_BOOT },
+          { label: t('rules.awardGoldenGlove'), points: SCORING.GOLDEN_GLOVE },
+          { label: t('rules.awardBestYoung'), points: SCORING.BEST_YOUNG },
+          { label: t('rules.awardGoalsExact'), points: SCORING.TOTAL_GOALS_EXACT },
+          { label: t('rules.awardGoalsWithin3'), points: SCORING.TOTAL_GOALS_WITHIN_3 },
+          { label: t('rules.awardGoalsWithin5'), points: SCORING.TOTAL_GOALS_WITHIN_5 },
         ]}
       />
 
-      {/* Categories Explained */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <Target className="w-5 h-5 text-gold-400" />
-          Categorias de Prediccion
+          {t('rules.categoriesTitle')}
         </h3>
         <div className="space-y-3 text-sm text-gray-400 leading-relaxed">
           <p>
-            <span className="text-gold-400 font-semibold">1. Partidos:</span>{' '}
-            Predice el marcador de cada partido de la fase de grupos. Ganas puntos por acertar
-            el marcador exacto, el resultado con la diferencia correcta, o simplemente el resultado.
+            <span className="text-gold-400 font-semibold">{t('rules.category1')}</span>{' '}
+            {t('rules.category1Desc')}
           </p>
           <p>
-            <span className="text-gold-400 font-semibold">2. Equipos clasificados:</span>{' '}
-            Selecciona que equipos crees que avanzaran a cada ronda eliminatoria, desde dieciseisavos
-            hasta el campeon. Mientras mas avanzada la ronda, mas puntos.
+            <span className="text-gold-400 font-semibold">{t('rules.category2')}</span>{' '}
+            {t('rules.category2Desc')}
           </p>
           <p>
-            <span className="text-gold-400 font-semibold">3. Premios individuales:</span>{' '}
-            Predice quien ganara el Balon de Oro, la Bota de Oro, el Guante de Oro, el premio
-            al Mejor Jugador Joven y cuantos goles totales habra en el torneo.
+            <span className="text-gold-400 font-semibold">{t('rules.category3')}</span>{' '}
+            {t('rules.category3Desc')}
           </p>
         </div>
       </div>
 
-      {/* Deadlines */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <Calendar className="w-5 h-5 text-gold-400" />
-          Fechas Importantes
+          {t('rules.importantDates')}
         </h3>
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-white">4 de junio, 2026 - 11:59 PM (COT)</p>
+              <p className="text-sm font-medium text-white">{t('rules.deadline')}</p>
               <p className="text-sm text-gray-500">
-                Cierre de predicciones. Despues de esta fecha no se podran modificar predicciones.
+                {t('rules.deadlineDesc')}
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-white">11 de junio, 2026</p>
+              <p className="text-sm font-medium text-white">{t('rules.tournamentStart')}</p>
               <p className="text-sm text-gray-500">
-                Inicio del Mundial FIFA 2026. Las predicciones de todos los participantes se hacen
-                visibles y comienza el conteo de puntos.
+                {t('rules.tournamentStartDesc')}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Prize Distribution */}
       <div className="bg-wc-card border border-gold-500/30 rounded-xl p-6 space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-gold-400" />
-          Distribucion de Premios
+          {t('rules.prizeDistribution')}
         </h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-400" />
-              <span className="text-sm font-semibold text-yellow-400">1er Lugar</span>
+              <span className="text-sm font-semibold text-yellow-400">{t('rules.1stPlace')}</span>
             </div>
-            <span className="text-sm font-bold text-yellow-400">70% del pozo</span>
+            <span className="text-sm font-bold text-yellow-400">{t('rules.1stPrize')}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-gray-400/5 rounded-lg border border-gray-400/20">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-gray-400" />
-              <span className="text-sm font-semibold text-gray-300">2do Lugar</span>
+              <span className="text-sm font-semibold text-gray-300">{t('rules.2ndPlace')}</span>
             </div>
-            <span className="text-sm font-bold text-gray-300">15% del pozo</span>
+            <span className="text-sm font-bold text-gray-300">{t('rules.2ndPrize')}</span>
           </div>
           <div className="flex items-center justify-between p-3 bg-amber-700/5 rounded-lg border border-amber-700/20">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-600" />
-              <span className="text-sm font-semibold text-amber-500">3er Lugar</span>
+              <span className="text-sm font-semibold text-amber-500">{t('rules.3rdPlace')}</span>
             </div>
-            <span className="text-sm font-bold text-amber-500">Devolucion de entrada (${ENTRY_FEE_COP.toLocaleString('es-CO')})</span>
+            <span className="text-sm font-bold text-amber-500">{t('rules.3rdPrize', { amount: formatCurrency(ENTRY_FEE_COP) })}</span>
           </div>
         </div>
         <p className="text-xs text-gray-600 mt-2">
-          El restante 15% se destina a costos de operacion. El pozo total depende del numero de
-          participantes con pago verificado.
+          {t('rules.remaining')}
         </p>
       </div>
 
-      {/* Entry Fee */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-3">Inscripcion</h3>
+        <h3 className="text-lg font-bold text-white mb-3">{t('rules.registration')}</h3>
         <div className="flex items-center justify-between p-4 bg-wc-darker rounded-lg">
-          <span className="text-sm text-gray-400">Valor de la entrada</span>
+          <span className="text-sm text-gray-400">{t('rules.entryFee')}</span>
           <span className="text-xl font-bold text-gold-400">
-            ${ENTRY_FEE_COP.toLocaleString('es-CO')} COP
+            {formatCurrency(ENTRY_FEE_COP)}
           </span>
         </div>
         <p className="text-sm text-gray-500 mt-3">
-          Pago por Nequi al numero <span className="text-gold-400 font-mono font-semibold">{NEQUI_NUMBER}</span>.
-          Sube tu comprobante en la seccion de{' '}
+          {t('rules.paymentInstructions', { nequi: NEQUI_NUMBER })}{' '}
           <a href="/pago" className="text-gold-400 underline hover:text-gold-300">
-            Pago
+            {t('rules.paymentLink')}
           </a>.
         </p>
       </div>
 
-      {/* FAQ */}
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <HelpCircle className="w-5 h-5 text-gold-400" />
-          Preguntas Frecuentes
+          {t('rules.faq')}
         </h3>
         <div className="space-y-2">
-          <FAQItem
-            question="Puedo cambiar mis predicciones despues de enviarlas?"
-            answer="Si, puedes modificar tus predicciones cuantas veces quieras antes del cierre el 4 de junio de 2026 a las 11:59 PM hora Colombia. Despues de esa fecha, las predicciones quedan bloqueadas."
-          />
-          <FAQItem
-            question="Que pasa si no pago antes del inicio del torneo?"
-            answer="Puedes ingresar tus predicciones sin haber pagado, pero no participaras oficialmente en la polla ni seras elegible para premios hasta que tu pago sea verificado."
-          />
-          <FAQItem
-            question="Como se desempatan posiciones iguales?"
-            answer="En caso de empate en puntos totales, se prioriza: 1) mas marcadores exactos, 2) mas resultados con diferencia correcta, 3) acierto del campeon. Si persiste el empate, se divide el premio."
-          />
-          <FAQItem
-            question="Solo se predicen partidos de fase de grupos?"
-            answer="Si, las predicciones de marcador son solo para los 48 partidos de la fase de grupos. Para las fases eliminatorias, predices que equipos clasifican a cada ronda."
-          />
-          <FAQItem
-            question="Cuando puedo ver las predicciones de los demas?"
-            answer="Las predicciones de todos los participantes se hacen visibles a partir del 11 de junio de 2026, cuando comienza el Mundial. Antes de esa fecha, solo puedes ver las tuyas."
-          />
-          <FAQItem
-            question="Que pasa con los partidos que van a penales?"
-            answer="Para la fase de grupos, solo aplica el resultado en los 90 minutos. Para las predicciones de equipos clasificados, lo que importa es que el equipo avance, independientemente de como."
-          />
+          <FAQItem question={t('rules.faq1Q')} answer={t('rules.faq1A')} />
+          <FAQItem question={t('rules.faq2Q')} answer={t('rules.faq2A')} />
+          <FAQItem question={t('rules.faq3Q')} answer={t('rules.faq3A')} />
+          <FAQItem question={t('rules.faq4Q')} answer={t('rules.faq4A')} />
+          <FAQItem question={t('rules.faq5Q')} answer={t('rules.faq5A')} />
+          <FAQItem question={t('rules.faq6Q')} answer={t('rules.faq6A')} />
         </div>
       </div>
     </div>

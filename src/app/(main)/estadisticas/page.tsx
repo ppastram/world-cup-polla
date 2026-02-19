@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { BarChart3, Trophy, Target, TrendingUp, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import TeamFlag from '@/components/shared/TeamFlag';
+import { useTranslation } from '@/i18n';
 import type { Team } from '@/lib/types';
 
 interface ChampionPick {
@@ -28,6 +29,7 @@ interface ConsensusScore {
 }
 
 export default function EstadisticasPage() {
+  const { t } = useTranslation();
   const [championPicks, setChampionPicks] = useState<ChampionPick[]>([]);
   const [groupWinners, setGroupWinners] = useState<Record<string, GroupWinnerPick[]>>({});
   const [avgTotalGoals, setAvgTotalGoals] = useState<number | null>(null);
@@ -39,7 +41,6 @@ export default function EstadisticasPage() {
     async function fetchStats() {
       const supabase = createClient();
 
-      // 1. Champion picks (RPC bypasses RLS to include all users)
       const { data: champData } = await supabase.rpc('get_champion_picks');
 
       if (champData && champData.length > 0) {
@@ -55,7 +56,6 @@ export default function EstadisticasPage() {
         );
       }
 
-      // 2. Group winner picks (RPC bypasses RLS to include all users)
       const { data: advData } = await supabase.rpc('get_round32_picks');
 
       if (advData && advData.length > 0) {
@@ -70,21 +70,18 @@ export default function EstadisticasPage() {
             count: Number(r.pick_count),
           });
         }
-        // Keep top 4 per group
         for (const letter of Object.keys(result)) {
           result[letter] = result[letter].slice(0, 4);
         }
         setGroupWinners(result);
       }
 
-      // 3. Average total goals guess (RPC bypasses RLS)
       const { data: goalsData } = await supabase.rpc('get_avg_total_goals');
 
       if (goalsData && goalsData.length > 0 && goalsData[0].avg_goals !== null) {
         setAvgTotalGoals(Number(goalsData[0].avg_goals));
       }
 
-      // 3b. Actual total goals scored in finished matches (matches table has public read)
       const { data: finishedMatches } = await supabase
         .from('matches')
         .select('home_score, away_score')
@@ -98,7 +95,6 @@ export default function EstadisticasPage() {
         setActualTotalGoals({ goals: totalGoals, matches: finishedMatches.length });
       }
 
-      // 4. Consensus scores for upcoming matches (RPC bypasses RLS)
       const { data: upcomingMatches } = await supabase
         .from('matches')
         .select('id, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
@@ -153,23 +149,21 @@ export default function EstadisticasPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <BarChart3 className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Estadisticas</h1>
-          <p className="text-sm text-gray-500">Tendencias y predicciones populares</p>
+          <h1 className="text-2xl font-bold text-white">{t('stats.title')}</h1>
+          <p className="text-sm text-gray-500">{t('stats.subtitle')}</p>
         </div>
       </div>
 
-      {/* Most popular champion */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6">
         <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
           <Trophy className="w-5 h-5 text-gold-400" />
-          Campeon mas elegido
+          {t('stats.mostPickedChampion')}
         </h2>
         {championPicks.length === 0 ? (
-          <p className="text-sm text-gray-500">Aun no hay predicciones de campeon.</p>
+          <p className="text-sm text-gray-500">{t('stats.noChampionPicks')}</p>
         ) : (
           <div className="space-y-2">
             {championPicks.slice(0, 10).map((pick, i) => (
@@ -183,9 +177,7 @@ export default function EstadisticasPage() {
                   <div className="h-6 bg-wc-darker rounded-full overflow-hidden relative">
                     <div
                       className="h-full bg-gold-500/30 rounded-full transition-all duration-700"
-                      style={{
-                        width: `${pick.percentage}%`,
-                      }}
+                      style={{ width: `${pick.percentage}%` }}
                     />
                     <span className="absolute inset-0 flex items-center justify-end pr-2 text-xs font-semibold text-gold-400">
                       {pick.count} ({pick.percentage}%)
@@ -198,38 +190,40 @@ export default function EstadisticasPage() {
         )}
       </div>
 
-      {/* Average total goals */}
       {avgTotalGoals !== null && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-6">
           <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-gold-400" />
-            Prediccion promedio de goles totales
+            {t('stats.avgTotalGoals')}
           </h2>
           <p className="text-4xl font-extrabold text-yellow-400">{avgTotalGoals}</p>
-          <p className="text-sm text-gray-500 mt-1">goles en todo el torneo</p>
+          <p className="text-sm text-gray-500 mt-1">{t('stats.goalsInTournament')}</p>
         </div>
       )}
 
-      {/* Actual total goals scored */}
       {actualTotalGoals !== null && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-6">
           <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
             <Target className="w-5 h-5 text-gold-400" />
-            Goles totales en el torneo
+            {t('stats.actualGoals')}
           </h2>
           <p className="text-4xl font-extrabold text-emerald-400">{actualTotalGoals.goals}</p>
           <p className="text-sm text-gray-500 mt-1">
-            en {actualTotalGoals.matches} partido{actualTotalGoals.matches !== 1 ? 's' : ''} jugado{actualTotalGoals.matches !== 1 ? 's' : ''} ({(actualTotalGoals.goals / actualTotalGoals.matches).toFixed(1)} por partido)
+            {t('stats.matchesPlayed', {
+              count: actualTotalGoals.matches,
+              s: actualTotalGoals.matches !== 1 ? 'es' : '',
+              s2: actualTotalGoals.matches !== 1 ? 's' : '',
+              avg: (actualTotalGoals.goals / actualTotalGoals.matches).toFixed(1),
+            })}
           </p>
         </div>
       )}
 
-      {/* Group favorites */}
       {sortedGroups.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
             <Target className="w-5 h-5 text-gold-400" />
-            Favoritos por grupo (clasificados a dieciseisavos)
+            {t('stats.groupFavorites')}
           </h2>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {sortedGroups.map((letter) => {
@@ -240,7 +234,7 @@ export default function EstadisticasPage() {
                   className="bg-wc-card border border-wc-border rounded-xl overflow-hidden"
                 >
                   <div className="bg-wc-darker px-4 py-2 border-b border-wc-border">
-                    <h3 className="text-sm font-bold text-gold-400">Grupo {letter}</h3>
+                    <h3 className="text-sm font-bold text-gold-400">{t('stats.group', { letter })}</h3>
                   </div>
                   <div className="divide-y divide-wc-border">
                     {picks.map((pick) => (
@@ -253,7 +247,7 @@ export default function EstadisticasPage() {
                           <span className="text-sm text-gray-300">{pick.team.name}</span>
                         </div>
                         <span className="text-xs font-semibold text-gray-500">
-                          {pick.count} voto{pick.count !== 1 ? 's' : ''}
+                          {t('stats.votes', { count: pick.count, s: pick.count !== 1 ? 's' : '' })}
                         </span>
                       </div>
                     ))}
@@ -265,12 +259,11 @@ export default function EstadisticasPage() {
         </div>
       )}
 
-      {/* Consensus scores */}
       {consensusScores.length > 0 && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-6">
           <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-gold-400" />
-            Marcador consenso (proximos partidos)
+            {t('stats.consensusScore')}
           </h2>
           <div className="space-y-3">
             {consensusScores.map((cs) => (
@@ -298,18 +291,17 @@ export default function EstadisticasPage() {
               </div>
             ))}
             <p className="text-xs text-gray-600 text-center mt-2">
-              Promedio basado en las predicciones de todos los participantes
+              {t('stats.consensusBasis')}
             </p>
           </div>
         </div>
       )}
 
-      {/* Empty state */}
       {championPicks.length === 0 && avgTotalGoals === null && actualTotalGoals === null && sortedGroups.length === 0 && consensusScores.length === 0 && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <BarChart3 className="w-10 h-10 text-gray-700 mx-auto mb-3" />
           <p className="text-gray-500">
-            Las estadisticas se mostraran cuando los participantes empiecen a ingresar sus predicciones.
+            {t('stats.empty')}
           </p>
         </div>
       )}

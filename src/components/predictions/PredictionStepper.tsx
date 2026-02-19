@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight, Save, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 interface PredictionStepperProps {
   currentStep: number;
@@ -10,14 +11,6 @@ interface PredictionStepperProps {
   saving?: boolean;
 }
 
-const STEP_TITLES = [
-  'Fase de Grupos A-D',
-  'Fase de Grupos E-H',
-  'Fase de Grupos I-L',
-  'Equipos Clasificados',
-  'Premios Individuales',
-];
-
 export default function PredictionStepper({
   currentStep,
   totalSteps,
@@ -25,6 +18,16 @@ export default function PredictionStepper({
   onSave,
   saving = false,
 }: PredictionStepperProps) {
+  const { t } = useTranslation();
+
+  const STEP_TITLES = [
+    t('stepper.step1'),
+    t('stepper.step2'),
+    t('stepper.step3'),
+    t('stepper.step4'),
+    t('stepper.step5'),
+  ];
+
   const isFirst = currentStep === 0;
   const isLast = currentStep === totalSteps - 1;
 
@@ -52,7 +55,7 @@ export default function PredictionStepper({
 
       {/* Step Title */}
       <h2 className="text-center text-xl font-bold text-white">
-        {STEP_TITLES[currentStep] || `Paso ${currentStep + 1}`}
+        {STEP_TITLES[currentStep] || t("stepper.step", { n: currentStep + 1 })}
       </h2>
 
       {/* Navigation + Save */}
@@ -64,7 +67,7 @@ export default function PredictionStepper({
           className="flex items-center gap-1 px-4 py-2 rounded-lg border border-wc-border text-gray-300 hover:bg-wc-card hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
         >
           <ChevronLeft className="w-4 h-4" />
-          Anterior
+          {t("stepper.previous")}
         </button>
 
         <button
@@ -78,7 +81,7 @@ export default function PredictionStepper({
           ) : (
             <Save className="w-4 h-4" />
           )}
-          {saving ? 'Guardando...' : 'Guardar'}
+          {saving ? t('stepper.saving') : t('stepper.save')}
         </button>
 
         <button
@@ -87,7 +90,7 @@ export default function PredictionStepper({
           disabled={isLast}
           className="flex items-center gap-1 px-4 py-2 rounded-lg border border-wc-border text-gray-300 hover:bg-wc-card hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-sm"
         >
-          Siguiente
+          {t("stepper.next")}
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

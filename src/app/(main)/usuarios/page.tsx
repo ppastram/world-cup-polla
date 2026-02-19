@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/lib/types';
 import MascotAvatar from '@/components/shared/MascotAvatar';
+import CountryFlag from '@/components/shared/CountryFlag';
+import { useTranslation } from '@/i18n';
 
 interface ParticipantWithStats extends Profile {
   match_prediction_count?: number;
@@ -14,6 +16,7 @@ interface ParticipantWithStats extends Profile {
 }
 
 export default function UsuariosPage() {
+  const { t } = useTranslation();
   const [participants, setParticipants] = useState<ParticipantWithStats[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +29,6 @@ export default function UsuariosPage() {
         .order('display_name', { ascending: true });
 
       if (!error && data) {
-        // Fetch prediction counts
         const userIds = data.map((p) => p.id);
         const { data: predCounts } = await supabase
           .from('match_predictions')
@@ -40,7 +42,6 @@ export default function UsuariosPage() {
           }
         }
 
-        // Fetch advancing prediction counts
         const { data: advCounts } = await supabase
           .from('advancing_predictions')
           .select('user_id')
@@ -53,7 +54,6 @@ export default function UsuariosPage() {
           }
         }
 
-        // Fetch award prediction counts
         const { data: awardCounts } = await supabase
           .from('award_predictions')
           .select('user_id')
@@ -82,25 +82,26 @@ export default function UsuariosPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Users className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Participantes</h1>
+          <h1 className="text-2xl font-bold text-white">{t('participants.title')}</h1>
           <p className="text-sm text-gray-500">
-            {participants.length} persona{participants.length !== 1 ? 's' : ''} registrada{participants.length !== 1 ? 's' : ''}
+            {t('participants.count', {
+              count: participants.length,
+              s: participants.length !== 1 ? 's' : '',
+              s2: participants.length !== 1 ? 's' : '',
+            })}
           </p>
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 text-gold-400 animate-spin" />
         </div>
       )}
 
-      {/* Participants Grid */}
       {!loading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {participants.map((p) => {
@@ -114,7 +115,8 @@ export default function UsuariosPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <MascotAvatar avatarUrl={p.avatar_url} displayName={p.display_name || '?'} size="md" />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-200 truncate">
+                      <p className="text-sm font-semibold text-gray-200 truncate flex items-center gap-1.5">
+                        <CountryFlag countryCode={p.country_code} size="sm" />
                         {p.display_name}
                       </p>
                     </div>
@@ -127,11 +129,10 @@ export default function UsuariosPage() {
         </div>
       )}
 
-      {/* Empty */}
       {!loading && participants.length === 0 && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <Users className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-500">Aun no hay participantes registrados.</p>
+          <p className="text-gray-500">{t('participants.empty')}</p>
         </div>
       )}
     </div>

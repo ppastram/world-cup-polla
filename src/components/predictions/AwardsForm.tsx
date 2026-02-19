@@ -2,6 +2,8 @@
 
 import { Trophy, Target, Shield, Star, Hash, CheckCircle2, XCircle } from 'lucide-react';
 import { SCORING } from '@/lib/constants';
+import { useTranslation } from '@/i18n';
+import type { TranslationKey } from '@/i18n';
 
 interface AwardsFormProps {
   predictions: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>;
@@ -12,40 +14,40 @@ interface AwardsFormProps {
 const AWARDS = [
   {
     key: 'golden_ball',
-    label: 'Balon de Oro',
-    description: 'Mejor jugador del torneo',
+    labelKey: 'awards.goldenBall' as TranslationKey,
+    descKey: 'awards.goldenBallDesc' as TranslationKey,
     icon: Trophy,
     type: 'player' as const,
     points: `${SCORING.GOLDEN_BALL} pts`,
   },
   {
     key: 'golden_boot',
-    label: 'Bota de Oro',
-    description: 'Maximo goleador del torneo',
+    labelKey: 'awards.goldenBoot' as TranslationKey,
+    descKey: 'awards.goldenBootDesc' as TranslationKey,
     icon: Target,
     type: 'player' as const,
     points: `${SCORING.GOLDEN_BOOT} pts`,
   },
   {
     key: 'golden_glove',
-    label: 'Guante de Oro',
-    description: 'Mejor portero del torneo',
+    labelKey: 'awards.goldenGlove' as TranslationKey,
+    descKey: 'awards.goldenGloveDesc' as TranslationKey,
     icon: Shield,
     type: 'player' as const,
     points: `${SCORING.GOLDEN_GLOVE} pts`,
   },
   {
     key: 'best_young',
-    label: 'Mejor Jugador Joven',
-    description: 'Mejor jugador sub-21',
+    labelKey: 'awards.bestYoung' as TranslationKey,
+    descKey: 'awards.bestYoungDesc' as TranslationKey,
     icon: Star,
     type: 'player' as const,
     points: `${SCORING.BEST_YOUNG} pts`,
   },
   {
     key: 'total_goals',
-    label: 'Total de Goles',
-    description: 'Cantidad total de goles en el torneo',
+    labelKey: 'awards.totalGoals' as TranslationKey,
+    descKey: 'awards.totalGoalsDesc' as TranslationKey,
     icon: Hash,
     type: 'number' as const,
     points: `${SCORING.TOTAL_GOALS_EXACT}/${SCORING.TOTAL_GOALS_WITHIN_3}/${SCORING.TOTAL_GOALS_WITHIN_5} pts`,
@@ -57,6 +59,8 @@ export default function AwardsForm({
   onChange,
   disabled = false,
 }: AwardsFormProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-4">
       {AWARDS.map((award) => {
@@ -86,10 +90,10 @@ export default function AwardsForm({
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-semibold text-white">
-                  {award.label}
+                  {t(award.labelKey)}
                   <span className="text-xs text-gray-500 font-normal ml-2">· {award.points}</span>
                 </h4>
-                <p className="text-xs text-gray-500 mb-3">{award.description}</p>
+                <p className="text-xs text-gray-500 mb-3">{t(award.descKey)}</p>
 
                 {award.type === 'player' ? (
                   <input
@@ -99,7 +103,7 @@ export default function AwardsForm({
                       onChange(award.key, { player_name: e.target.value })
                     }
                     disabled={disabled}
-                    placeholder="Nombre del jugador"
+                    placeholder={t('awards.playerPlaceholder')}
                     className="w-full bg-wc-darker border border-wc-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/60 focus:ring-1 focus:ring-gold-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   />
                 ) : (
@@ -112,7 +116,7 @@ export default function AwardsForm({
                       })
                     }
                     disabled={disabled}
-                    placeholder="Ej: 172"
+                    placeholder={t('awards.goalsPlaceholder')}
                     min={0}
                     max={500}
                     className="w-full bg-wc-darker border border-wc-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/60 focus:ring-1 focus:ring-gold-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, Users, Target, DollarSign } from "lucide-react";
+import { Trophy, Users, Target, DollarSign, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
-import { TOURNAMENT_START, ENTRY_FEE_COP, calculatePrizes } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/client";
+import { TOURNAMENT_START, ENTRY_FEE_COP, FIXED_PRIZES } from "@/lib/constants";
+import { useTranslation } from "@/i18n";
 
 function CountdownTimer() {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -29,10 +30,10 @@ function CountdownTimer() {
   return (
     <div className="flex gap-4 justify-center">
       {[
-        { value: timeLeft.days, label: "Días" },
-        { value: timeLeft.hours, label: "Horas" },
-        { value: timeLeft.minutes, label: "Min" },
-        { value: timeLeft.seconds, label: "Seg" },
+        { value: timeLeft.days, label: t("countdown.days") },
+        { value: timeLeft.hours, label: t("countdown.hours") },
+        { value: timeLeft.minutes, label: t("countdown.min") },
+        { value: timeLeft.seconds, label: t("countdown.sec") },
       ].map((item) => (
         <div key={item.label} className="text-center">
           <div className="bg-wc-card border border-wc-border rounded-xl w-20 h-20 flex items-center justify-center">
@@ -48,51 +49,32 @@ function CountdownTimer() {
 }
 
 function PrizePoolDisplay() {
-  const [paidCount, setPaidCount] = useState(0);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
-      .eq("payment_status", "verified")
-      .then(({ count }) => {
-        if (count) setPaidCount(count);
-      });
-  }, []);
-
-  const prizes = calculatePrizes(paidCount);
+  const { t, formatCurrency } = useTranslation();
 
   return (
     <div className="bg-wc-card border border-gold-500/30 rounded-2xl p-8 card-glow">
       <div className="flex items-center justify-center gap-2 mb-4">
         <DollarSign className="w-6 h-6 text-gold-400" />
-        <h2 className="text-2xl font-bold text-white">Pozo Acumulado</h2>
+        <h2 className="text-2xl font-bold text-white">{t("landing.prizePool")}</h2>
       </div>
-      <p className="text-5xl font-extrabold text-center mb-2 bg-gradient-to-r from-yellow-300 to-green-400 bg-clip-text text-transparent">
-        ${prizes.totalPool.toLocaleString("es-CO")}
-      </p>
-      <p className="text-gray-500 text-center text-sm mb-6">
-        {prizes.paidCount} participante{prizes.paidCount !== 1 ? "s" : ""} inscrito{prizes.paidCount !== 1 ? "s" : ""}
-      </p>
       <div className="grid grid-cols-3 gap-4 text-center">
         <div>
           <p className="text-yellow-400 font-bold text-lg">
-            ${prizes.firstPlace.toLocaleString("es-CO")}
+            {formatCurrency(FIXED_PRIZES.firstPlace)}
           </p>
-          <p className="text-gray-500 text-xs">1er Lugar (70%)</p>
+          <p className="text-gray-500 text-xs">{t("landing.1stPlace")}</p>
         </div>
         <div>
           <p className="text-gray-300 font-bold text-lg">
-            ${prizes.secondPlace.toLocaleString("es-CO")}
+            {formatCurrency(FIXED_PRIZES.secondPlace)}
           </p>
-          <p className="text-gray-500 text-xs">2do Lugar (15%)</p>
+          <p className="text-gray-500 text-xs">{t("landing.2ndPlace")}</p>
         </div>
         <div>
           <p className="text-gray-300 font-bold text-lg">
-            ${ENTRY_FEE_COP.toLocaleString("es-CO")}
+            {formatCurrency(FIXED_PRIZES.thirdPlace)}
           </p>
-          <p className="text-gray-500 text-xs">3er Lugar</p>
+          <p className="text-gray-500 text-xs">{t("landing.3rdPlace")}</p>
         </div>
       </div>
     </div>
@@ -100,8 +82,21 @@ function PrizePoolDisplay() {
 }
 
 export default function LandingPage() {
+  const { t, formatCurrency, locale, setLocale } = useTranslation();
+
   return (
     <div className="min-h-screen bg-wc-darker">
+      {/* Language Toggle */}
+      <div className="absolute top-4 right-4 z-10">
+        <button
+          onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+          className="flex items-center gap-1.5 text-gray-400 hover:text-white px-3 py-2 rounded-lg text-xs font-medium bg-wc-card/80 border border-wc-border hover:border-gold-500/30 backdrop-blur-sm transition-colors"
+        >
+          <Globe className="w-4 h-4" />
+          {locale === 'es' ? 'EN' : 'ES'}
+        </button>
+      </div>
+
       {/* Hero */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold-500/5 via-transparent to-transparent" />
@@ -112,16 +107,16 @@ export default function LandingPage() {
             className="mx-auto h-32 md:h-40 mb-6 drop-shadow-2xl"
           />
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4">
-            <span className="text-gradient-gold">Ampolla</span>{" "}
-            <span className="text-white">Mundialista</span>
+            <span className="text-gradient-gold">{t("landing.title1")}</span>{" "}
+            <span className="text-white">{t("landing.title2")}</span>
           </h1>
           <div className="flex items-center justify-center gap-3 text-2xl mb-2">
             <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
           </div>
-          <p className="text-xl text-gray-400 mb-2">La polla que duele perder.</p>
+          <p className="text-xl text-gray-400 mb-2">{t("landing.tagline")}</p>
 
           <div className="mb-10">
-            <p className="text-sm text-gray-500 mb-4">El Mundial comienza en</p>
+            <p className="text-sm text-gray-500 mb-4">{t("landing.worldCupStartsIn")}</p>
             <CountdownTimer />
           </div>
 
@@ -130,13 +125,13 @@ export default function LandingPage() {
               href="/registro"
               className="bg-gold-500 hover:bg-gold-600 text-black font-bold px-8 py-3 rounded-xl text-lg transition-colors"
             >
-              Registrarme
+              {t("landing.register")}
             </Link>
             <Link
               href="/login"
               className="border border-wc-border hover:border-gold-500/50 text-white font-semibold px-8 py-3 rounded-xl text-lg transition-colors"
             >
-              Iniciar sesión
+              {t("landing.login")}
             </Link>
           </div>
 
@@ -153,18 +148,18 @@ export default function LandingPage() {
           {[
             {
               icon: Target,
-              title: "Predice",
-              desc: "Ingresa tus predicciones para los 48 partidos de la fase de grupos, equipos clasificados y premios individuales.",
+              title: t("landing.feature1Title"),
+              desc: t("landing.feature1Desc"),
             },
             {
               icon: Users,
-              title: "Compite",
-              desc: "Compara tus predicciones con tus amigos. Tabla de posiciones en tiempo real durante el mundial.",
+              title: t("landing.feature2Title"),
+              desc: t("landing.feature2Desc"),
             },
             {
               icon: Trophy,
-              title: "Gana",
-              desc: `El mejor predictor se lleva el 70% del pozo. Segundo lugar 15%. Tercer lugar recupera su entrada de $${ENTRY_FEE_COP.toLocaleString("es-CO")}.`,
+              title: t("landing.feature3Title"),
+              desc: t("landing.feature3Desc", { entryFee: formatCurrency(ENTRY_FEE_COP) }),
             },
           ].map((feature) => {
             const Icon = feature.icon;
@@ -188,39 +183,39 @@ export default function LandingPage() {
       <div className="max-w-3xl mx-auto px-4 pb-16">
         <div className="bg-wc-card border border-wc-border rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
-            Sistema de Puntos
+            {t("landing.scoringSystem")}
           </h2>
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-blue-400 font-semibold mb-3">Partidos</h3>
+              <h3 className="text-blue-400 font-semibold mb-3">{t("landing.matches")}</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex justify-between">
-                  <span>Marcador exacto</span>
+                  <span>{t("landing.exactScore")}</span>
                   <span className="text-yellow-300 font-bold">5 pts</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Resultado + diferencia</span>
+                  <span>{t("landing.resultAndDiff")}</span>
                   <span className="text-yellow-300 font-bold">3 pts</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Resultado correcto</span>
+                  <span>{t("landing.correctResult")}</span>
                   <span className="text-yellow-300 font-bold">2 pts</span>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-blue-400 font-semibold mb-3">Clasificados</h3>
+              <h3 className="text-blue-400 font-semibold mb-3">{t("landing.advancing")}</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li className="flex justify-between">
-                  <span>Campeón</span>
+                  <span>{t("landing.champion")}</span>
                   <span className="text-yellow-300 font-bold">20 pts</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Finalistas</span>
+                  <span>{t("landing.finalists")}</span>
                   <span className="text-yellow-300 font-bold">12 pts</span>
                 </li>
                 <li className="flex justify-between">
-                  <span>Semifinalistas</span>
+                  <span>{t("landing.semifinalists")}</span>
                   <span className="text-yellow-300 font-bold">8 pts</span>
                 </li>
               </ul>
@@ -234,7 +229,7 @@ export default function LandingPage() {
         <div className="flex items-center justify-center gap-4 text-xl mb-2">
           <span>🇲🇽</span><span>🇺🇸</span><span>🇨🇦</span>
         </div>
-        <p className="text-gray-600 text-sm">Ampolla Mundialista 2026 — México · United States · Canada</p>
+        <p className="text-gray-600 text-sm">{t("landing.footer")}</p>
       </footer>
     </div>
   );

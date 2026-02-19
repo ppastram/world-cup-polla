@@ -3,6 +3,8 @@
 import { Trophy, Medal, Award } from 'lucide-react';
 import type { LeaderboardEntry } from '@/lib/types';
 import MascotAvatar from '@/components/shared/MascotAvatar';
+import CountryFlag from '@/components/shared/CountryFlag';
+import { useTranslation } from '@/i18n';
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -39,11 +41,13 @@ function getRankStyle(rank: number) {
 }
 
 export default function LeaderboardTable({ entries, onUserClick }: LeaderboardTableProps) {
+  const { t } = useTranslation();
+
   if (entries.length === 0) {
     return (
       <div className="bg-wc-card border border-wc-border rounded-xl p-8 text-center">
         <Trophy className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-        <p className="text-gray-500">La tabla de posiciones se actualizara cuando comience el mundial.</p>
+        <p className="text-gray-500">{t("leaderboard.empty")}</p>
       </div>
     );
   }
@@ -53,11 +57,11 @@ export default function LeaderboardTable({ entries, onUserClick }: LeaderboardTa
       {/* Header */}
       <div className="hidden sm:grid grid-cols-[60px_1fr_80px_80px_80px_80px] gap-2 px-4 py-3 bg-wc-darker border-b border-wc-border text-xs font-semibold text-gray-500 uppercase tracking-wider">
         <span className="text-center">#</span>
-        <span>Participante</span>
-        <span className="text-center">Total</span>
-        <span className="text-center">Partidos</span>
-        <span className="text-center">Clasif.</span>
-        <span className="text-center">Premios</span>
+        <span>{t("leaderboard.participant")}</span>
+        <span className="text-center">{t("leaderboard.total")}</span>
+        <span className="text-center">{t("leaderboard.matchPts")}</span>
+        <span className="text-center">{t("leaderboard.advancingPts")}</span>
+        <span className="text-center">{t("leaderboard.awardPts")}</span>
       </div>
 
       {/* Rows */}
@@ -86,8 +90,9 @@ export default function LeaderboardTable({ entries, onUserClick }: LeaderboardTa
               {/* Name */}
               <div className="flex items-center gap-3 min-w-0">
                 <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name ?? '?'} size="sm" />
+                <CountryFlag countryCode={profile?.country_code} size="sm" />
                 <span className="text-sm font-medium text-gray-200 truncate">
-                  {profile?.display_name ?? 'Usuario'}
+                  {profile?.display_name ?? t("leaderboard.user")}
                 </span>
               </div>
 

@@ -2,6 +2,7 @@ export interface Profile {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  country_code: string | null;
   is_admin: boolean;
   payment_status: "pending" | "uploaded" | "verified";
   payment_proof_url: string | null;

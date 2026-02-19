@@ -15,9 +15,11 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { ENTRY_FEE_COP, NEQUI_NUMBER } from '@/lib/constants';
+import { useTranslation } from '@/i18n';
 
 export default function PagoPage() {
   const { user, profile, loading: userLoading } = useUser();
+  const { t, formatCurrency } = useTranslation();
   const [uploading, setUploading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -42,14 +44,13 @@ export default function PagoPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      setUploadError('El archivo es demasiado grande. Maximo 5MB.');
+      setUploadError(t('payment.fileTooLarge'));
       return;
     }
     if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-      setUploadError('Solo se permiten imagenes o PDFs.');
+      setUploadError(t('payment.invalidFile'));
       return;
     }
 
@@ -74,7 +75,6 @@ export default function PagoPage() {
         .from('payment-proofs')
         .getPublicUrl(filePath);
 
-      // Update profile
       const { error: updateErr } = await supabase
         .from('profiles')
         .update({
@@ -108,16 +108,14 @@ export default function PagoPage() {
 
   return (
     <div className="space-y-6 max-w-xl mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <CreditCard className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Pago</h1>
-          <p className="text-sm text-gray-500">Inscripcion a la Ampolla Mundialista</p>
+          <h1 className="text-2xl font-bold text-white">{t('payment.title')}</h1>
+          <p className="text-sm text-gray-500">{t('payment.subtitle')}</p>
         </div>
       </div>
 
-      {/* Payment Status */}
       <div className={`rounded-xl border p-4 ${
         paymentStatus === 'verified'
           ? 'bg-emerald-900/20 border-emerald-700/50'
@@ -136,30 +134,28 @@ export default function PagoPage() {
           <div>
             <p className="text-sm font-semibold text-white">
               {paymentStatus === 'verified'
-                ? 'Pago verificado'
+                ? t('payment.verified')
                 : paymentStatus === 'uploaded'
-                ? 'Comprobante en revision'
-                : 'Pago pendiente'}
+                ? t('payment.uploaded')
+                : t('payment.pending')}
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
               {paymentStatus === 'verified'
-                ? 'Tu pago ha sido confirmado. Estas participando oficialmente.'
+                ? t('payment.verifiedDesc')
                 : paymentStatus === 'uploaded'
-                ? 'Hemos recibido tu comprobante. Te notificaremos cuando sea verificado.'
-                : 'Realiza tu pago por Nequi y sube el comprobante.'}
+                ? t('payment.uploadedDesc')
+                : t('payment.pendingDesc')}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Payment Info Card */}
       <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-bold text-white">Datos de pago</h2>
+        <h2 className="text-lg font-bold text-white">{t('payment.info')}</h2>
 
-        {/* Nequi Number */}
         <div>
           <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
-            Numero Nequi
+            {t('payment.nequiNumber')}
           </label>
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
@@ -170,7 +166,7 @@ export default function PagoPage() {
             <button
               onClick={handleCopyNequi}
               className="shrink-0 bg-wc-darker border border-wc-border rounded-lg p-3 hover:bg-wc-border transition-colors"
-              title="Copiar numero"
+              title={t('payment.copyNumber')}
             >
               {copied ? (
                 <Check className="w-5 h-5 text-emerald-400" />
@@ -181,52 +177,47 @@ export default function PagoPage() {
           </div>
         </div>
 
-        {/* Amount */}
         <div>
           <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
-            Valor a pagar
+            {t('payment.amount')}
           </label>
           <div className="bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
             <span className="text-lg font-bold text-white">
-              ${ENTRY_FEE_COP.toLocaleString('es-CO')} COP
+              {formatCurrency(ENTRY_FEE_COP)}
             </span>
           </div>
         </div>
 
-        {/* Instructions */}
         <div className="bg-wc-darker rounded-lg p-4 space-y-2">
-          <h3 className="text-sm font-semibold text-white">Instrucciones</h3>
+          <h3 className="text-sm font-semibold text-white">{t('payment.instructions')}</h3>
           <ol className="text-sm text-gray-400 space-y-1.5 list-decimal list-inside">
-            <li>Abre Nequi y selecciona &quot;Enviar dinero&quot;</li>
-            <li>Ingresa el numero <span className="text-gold-400 font-mono">{NEQUI_NUMBER}</span></li>
-            <li>Envia <span className="text-gold-400 font-semibold">${ENTRY_FEE_COP.toLocaleString('es-CO')}</span></li>
-            <li>Toma captura de pantalla del comprobante</li>
-            <li>Sube el comprobante aqui abajo</li>
+            <li>{t('payment.step1')}</li>
+            <li>{t('payment.step2', { nequi: NEQUI_NUMBER })}</li>
+            <li>{t('payment.step3', { amount: formatCurrency(ENTRY_FEE_COP) })}</li>
+            <li>{t('payment.step4')}</li>
+            <li>{t('payment.step5')}</li>
           </ol>
         </div>
       </div>
 
-      {/* Upload Section */}
       {paymentStatus !== 'verified' && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
-          <h2 className="text-lg font-bold text-white">Subir comprobante</h2>
+          <h2 className="text-lg font-bold text-white">{t('payment.uploadTitle')}</h2>
 
-          {/* Existing proof preview */}
           {proofUrl && (
             <div className="bg-wc-darker rounded-lg p-3">
               <div className="flex items-center gap-2 mb-2">
                 <FileImage className="w-4 h-4 text-gray-500" />
-                <span className="text-xs text-gray-500">Comprobante actual</span>
+                <span className="text-xs text-gray-500">{t('payment.currentProof')}</span>
               </div>
               <img
                 src={proofUrl}
-                alt="Comprobante de pago"
+                alt={t('payment.proofAlt')}
                 className="w-full max-h-64 object-contain rounded-lg"
               />
             </div>
           )}
 
-          {/* Upload area */}
           <div
             onClick={() => fileInputRef.current?.click()}
             className="border-2 border-dashed border-wc-border rounded-xl p-8 text-center cursor-pointer hover:border-gold-500/50 transition-colors"
@@ -237,11 +228,9 @@ export default function PagoPage() {
               <Upload className="w-8 h-8 text-gray-600 mx-auto mb-2" />
             )}
             <p className="text-sm text-gray-400">
-              {uploading
-                ? 'Subiendo comprobante...'
-                : 'Haz clic para seleccionar tu comprobante'}
+              {uploading ? t('payment.uploading') : t('payment.uploadPrompt')}
             </p>
-            <p className="text-xs text-gray-600 mt-1">PNG, JPG o PDF. Maximo 5MB</p>
+            <p className="text-xs text-gray-600 mt-1">{t('payment.uploadHint')}</p>
           </div>
 
           <input
@@ -252,7 +241,6 @@ export default function PagoPage() {
             className="hidden"
           />
 
-          {/* Error */}
           {uploadError && (
             <div className="bg-red-900/20 border border-red-800/30 rounded-lg px-4 py-3">
               <p className="text-sm text-red-400">{uploadError}</p>

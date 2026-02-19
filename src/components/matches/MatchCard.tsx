@@ -3,7 +3,9 @@
 import { MapPin, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import TeamFlag from '@/components/shared/TeamFlag';
+import { useTranslation } from '@/i18n';
 import type { Match, Team } from '@/lib/types';
 
 interface MatchCardProps {
@@ -13,6 +15,7 @@ interface MatchCardProps {
 }
 
 export default function MatchCard({ match, prediction, showPrediction = false }: MatchCardProps) {
+  const { t, locale } = useTranslation();
   const matchDate = new Date(match.match_date);
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
@@ -30,7 +33,7 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Clock className="w-3.5 h-3.5" />
           <span>
-            {format(matchDate, "d MMM, h:mm a", { locale: es })}
+            {format(matchDate, "d MMM, h:mm a", { locale: locale === 'es' ? es : enUS })}
           </span>
         </div>
         {isLive && (
@@ -39,12 +42,12 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
-            <span className="text-xs font-semibold text-emerald-400">EN VIVO</span>
+            <span className="text-xs font-semibold text-emerald-400">{t("matches.live")}</span>
           </div>
         )}
         {isFinished && (
           <span className="text-xs font-medium text-gray-500 bg-gray-800 px-2 py-0.5 rounded">
-            Finalizado
+            {t("matches.finished")}
           </span>
         )}
       </div>
@@ -61,7 +64,7 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
               </span>
             </>
           ) : (
-            <span className="text-sm text-gray-500">Por definir</span>
+            <span className="text-sm text-gray-500">{t("matches.tbd")}</span>
           )}
         </div>
 
@@ -92,7 +95,7 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
               <TeamFlag team={match.away_team} size="md" />
             </>
           ) : (
-            <span className="text-sm text-gray-500">Por definir</span>
+            <span className="text-sm text-gray-500">{t("matches.tbd")}</span>
           )}
         </div>
       </div>
@@ -109,7 +112,7 @@ export default function MatchCard({ match, prediction, showPrediction = false }:
       {showPrediction && prediction && (
         <div className="mt-3 pt-3 border-t border-wc-border">
           <div className="flex items-center justify-center gap-3">
-            <span className="text-xs text-gray-500">Tu prediccion:</span>
+            <span className="text-xs text-gray-500">{t("matches.yourPrediction")}</span>
             <span className="text-sm font-bold text-gold-400 tabular-nums">
               {prediction.home_score} - {prediction.away_score}
             </span>

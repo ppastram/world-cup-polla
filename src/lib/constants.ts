@@ -53,11 +53,10 @@ export const STAGES_LABELS: Record<string, string> = {
 
 export const ENTRY_FEE_COP = 300_000;
 
-export const PRIZE_POOL = {
-  entry_fee: ENTRY_FEE_COP,
-  first_place_pct: 0.7,
-  second_place_pct: 0.15,
-  third_place_return: true, // gets entry fee back
+export const FIXED_PRIZES = {
+  firstPlace: 20_000_000,
+  secondPlace: 5_000_000,
+  thirdPlace: 300_000,
 };
 
 export const NEQUI_NUMBER = process.env.NEXT_PUBLIC_NEQUI_NUMBER || "";
@@ -69,9 +68,9 @@ export function calculatePrizes(paidCount: number) {
   const totalPool = paidCount * ENTRY_FEE_COP;
   return {
     totalPool,
-    firstPlace: Math.floor(totalPool * PRIZE_POOL.first_place_pct),
-    secondPlace: Math.floor(totalPool * PRIZE_POOL.second_place_pct),
-    thirdPlace: ENTRY_FEE_COP, // gets entry fee back
+    firstPlace: FIXED_PRIZES.firstPlace,
+    secondPlace: FIXED_PRIZES.secondPlace,
+    thirdPlace: FIXED_PRIZES.thirdPlace,
     paidCount,
   };
 }

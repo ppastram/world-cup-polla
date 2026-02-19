@@ -5,11 +5,13 @@ import { GitCompare, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { TOURNAMENT_START } from '@/lib/constants';
 import TeamFlag from '@/components/shared/TeamFlag';
+import { useTranslation } from '@/i18n';
 import type { Profile, Match, Team, MatchPrediction } from '@/lib/types';
 
 type MatchWithTeams = Match & { home_team?: Team; away_team?: Team };
 
 export default function CompararPage() {
+  const { t } = useTranslation();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
   const [userA, setUserA] = useState<string>('');
@@ -69,12 +71,11 @@ export default function CompararPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <GitCompare className="w-7 h-7 text-gold-400" />
         <div>
-          <h1 className="text-2xl font-bold text-white">Comparar</h1>
-          <p className="text-sm text-gray-500">Predicciones cara a cara</p>
+          <h1 className="text-2xl font-bold text-white">{t('compare.title')}</h1>
+          <p className="text-sm text-gray-500">{t('compare.subtitle')}</p>
         </div>
       </div>
 
@@ -82,24 +83,23 @@ export default function CompararPage() {
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <Lock className="w-12 h-12 text-gray-700 mx-auto mb-4" />
           <p className="text-lg font-semibold text-gray-400 mb-2">
-            Disponible cuando comience el mundial
+            {t('compare.lockedTitle')}
           </p>
           <p className="text-sm text-gray-600">
-            La comparacion de predicciones estara disponible a partir del 11 de junio de 2026.
+            {t('compare.lockedDesc')}
           </p>
         </div>
       )}
 
       {isTournamentStarted && (
         <>
-          {/* User Selectors */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <select
               value={userA}
               onChange={(e) => setUserA(e.target.value)}
               className="w-full sm:flex-1 bg-wc-card border border-wc-border rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500/50 transition-colors"
             >
-              <option value="">Seleccionar participante</option>
+              <option value="">{t('compare.selectParticipant')}</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id} disabled={p.id === userB}>
                   {p.display_name}
@@ -116,7 +116,7 @@ export default function CompararPage() {
               onChange={(e) => setUserB(e.target.value)}
               className="w-full sm:flex-1 bg-wc-card border border-wc-border rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-gold-500/50 transition-colors"
             >
-              <option value="">Seleccionar participante</option>
+              <option value="">{t('compare.selectParticipant')}</option>
               {profiles.map((p) => (
                 <option key={p.id} value={p.id} disabled={p.id === userA}>
                   {p.display_name}
@@ -125,7 +125,6 @@ export default function CompararPage() {
             </select>
           </div>
 
-          {/* Comparison Table */}
           {loading && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-gold-400 animate-spin" />
@@ -134,18 +133,16 @@ export default function CompararPage() {
 
           {!loading && userA && userB && (
             <div className="bg-wc-card border border-wc-border rounded-xl overflow-hidden">
-              {/* Header */}
               <div className="grid grid-cols-[1fr_auto_1fr] gap-2 px-4 py-3 bg-wc-darker border-b border-wc-border">
                 <div className="text-sm font-semibold text-gold-400 text-center">
-                  {profileA?.display_name ?? 'Usuario A'}
+                  {profileA?.display_name ?? t('compare.userA')}
                 </div>
-                <div className="text-xs text-gray-600 flex items-center">Partido</div>
+                <div className="text-xs text-gray-600 flex items-center">{t('compare.match')}</div>
                 <div className="text-sm font-semibold text-gold-400 text-center">
-                  {profileB?.display_name ?? 'Usuario B'}
+                  {profileB?.display_name ?? t('compare.userB')}
                 </div>
               </div>
 
-              {/* Rows */}
               <div className="divide-y divide-wc-border">
                 {matches.map((match) => {
                   const predA = predsA.find((p) => p.match_id === match.id);
@@ -163,7 +160,6 @@ export default function CompararPage() {
                         isDifferent ? 'bg-gold-500/[0.03]' : ''
                       }`}
                     >
-                      {/* User A prediction */}
                       <div className="text-center">
                         {predA ? (
                           <span className={`text-sm font-bold tabular-nums ${isDifferent ? 'text-gold-400' : 'text-gray-300'}`}>
@@ -174,7 +170,6 @@ export default function CompararPage() {
                         )}
                       </div>
 
-                      {/* Match */}
                       <div className="flex items-center gap-2 px-3">
                         {match.home_team && (
                           <TeamFlag team={match.home_team} size="sm" />
@@ -187,7 +182,6 @@ export default function CompararPage() {
                         )}
                       </div>
 
-                      {/* User B prediction */}
                       <div className="text-center">
                         {predB ? (
                           <span className={`text-sm font-bold tabular-nums ${isDifferent ? 'text-gold-400' : 'text-gray-300'}`}>
@@ -204,7 +198,7 @@ export default function CompararPage() {
 
               {matches.length === 0 && (
                 <div className="p-8 text-center text-sm text-gray-500">
-                  No hay partidos cargados.
+                  {t('compare.noMatches')}
                 </div>
               )}
             </div>
@@ -213,7 +207,7 @@ export default function CompararPage() {
           {!loading && (!userA || !userB) && (
             <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
               <GitCompare className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-              <p className="text-gray-500">Selecciona dos participantes para comparar sus predicciones.</p>
+              <p className="text-gray-500">{t('compare.selectTwo')}</p>
             </div>
           )}
         </>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, Trophy, Target, Award, Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { STAGES_LABELS } from '@/lib/constants';
+import { useTranslation } from '@/i18n';
 import type { Match, MatchPrediction, AdvancingPrediction, AwardPrediction, Team, Profile } from '@/lib/types';
 
 interface PointsBreakdownProps {
@@ -22,6 +22,24 @@ interface MatchPredictionWithMatch extends MatchPrediction {
 }
 
 export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreakdownProps) {
+  const { t } = useTranslation();
+
+  const stageLabel = (stage: string) => {
+    const key = `stage.${stage}` as Parameters<typeof t>[0];
+    return t(key) || stage;
+  };
+
+  const awardLabel = (type: string) => {
+    const map: Record<string, string> = {
+      golden_ball: t('awards.goldenBall'),
+      golden_boot: t('awards.goldenBoot'),
+      golden_glove: t('awards.goldenGlove'),
+      best_young: t('awards.bestYoung'),
+      total_goals: t('awards.totalGoals'),
+    };
+    return map[type] || type;
+  };
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [matchPredictions, setMatchPredictions] = useState<MatchPredictionWithMatch[]>([]);
   const [advancingPredictions, setAdvancingPredictions] = useState<(AdvancingPrediction & { team: Team })[]>([]);
@@ -82,9 +100,9 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
         <div className="flex items-center justify-between px-6 py-4 border-b border-wc-border shrink-0">
           <div>
             <h2 className="text-lg font-bold text-white">
-              {profile?.display_name ?? 'Participante'}
+              {profile?.display_name ?? t("leaderboard.participant")}
             </h2>
-            <p className="text-sm text-gray-500">Desglose de puntos</p>
+            <p className="text-sm text-gray-500">{t("pointsBreakdown.title")}</p>
           </div>
           <button
             onClick={onClose}
@@ -107,17 +125,17 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                 <div className="bg-wc-darker rounded-lg p-3 text-center">
                   <Target className="w-4 h-4 text-gold-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-white">{totalMatchPoints}</p>
-                  <p className="text-xs text-gray-500">Partidos</p>
+                  <p className="text-xs text-gray-500">{t("pointsBreakdown.matches")}</p>
                 </div>
                 <div className="bg-wc-darker rounded-lg p-3 text-center">
                   <Trophy className="w-4 h-4 text-gold-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-white">{totalAdvancingPoints}</p>
-                  <p className="text-xs text-gray-500">Clasificados</p>
+                  <p className="text-xs text-gray-500">{t("pointsBreakdown.advancing")}</p>
                 </div>
                 <div className="bg-wc-darker rounded-lg p-3 text-center">
                   <Star className="w-4 h-4 text-gold-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-white">{totalAwardPoints}</p>
-                  <p className="text-xs text-gray-500">Premios</p>
+                  <p className="text-xs text-gray-500">{t("pointsBreakdown.awardsLabel")}</p>
                 </div>
               </div>
 
@@ -126,7 +144,7 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                 <div>
                   <h3 className="text-sm font-semibold text-gold-400 mb-3 flex items-center gap-2">
                     <Target className="w-4 h-4" />
-                    Predicciones de partidos
+                    {t("pointsBreakdown.matchPredictions")}
                   </h3>
                   <div className="space-y-2">
                     {matchPredictions.map((pred) => (
@@ -160,7 +178,7 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                 <div>
                   <h3 className="text-sm font-semibold text-gold-400 mb-3 flex items-center gap-2">
                     <Trophy className="w-4 h-4" />
-                    Equipos clasificados
+                    {t("pointsBreakdown.advancingTeams")}
                   </h3>
                   <div className="space-y-2">
                     {advancingPredictions.map((pred) => (
@@ -179,7 +197,7 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                           <span>{pred.team?.name ?? '?'}</span>
                           <span className="text-gray-600">-</span>
                           <span className="text-gray-600">
-                            {STAGES_LABELS[pred.round] ?? pred.round}
+                            {stageLabel(pred.round)}
                           </span>
                         </div>
                         <span className={`text-sm font-bold ${
@@ -198,26 +216,19 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                 <div>
                   <h3 className="text-sm font-semibold text-gold-400 mb-3 flex items-center gap-2">
                     <Award className="w-4 h-4" />
-                    Premios individuales
+                    {t("pointsBreakdown.awards")}
                   </h3>
                   <div className="space-y-2">
                     {awardPredictions.map((pred) => {
-                      const labels: Record<string, string> = {
-                        golden_ball: 'Balon de Oro',
-                        golden_boot: 'Bota de Oro',
-                        golden_glove: 'Guante de Oro',
-                        best_young: 'Mejor Joven',
-                        total_goals: 'Total de Goles',
-                      };
                       return (
                         <div
                           key={pred.id}
                           className="flex items-center justify-between bg-wc-darker rounded-lg px-3 py-2"
                         >
                           <div className="text-xs text-gray-400">
-                            <span>{labels[pred.award_type] ?? pred.award_type}</span>
+                            <span>{awardLabel(pred.award_type)}</span>
                             <span className="text-gray-600 ml-2">
-                              {pred.player_name ?? (pred.total_goals_guess !== null ? `${pred.total_goals_guess} goles` : '')}
+                              {pred.player_name ?? (pred.total_goals_guess !== null ? t("pointsBreakdown.goals", { count: pred.total_goals_guess }) : '')}
                             </span>
                           </div>
                           <span className={`text-sm font-bold ${
@@ -236,7 +247,7 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                 advancingPredictions.length === 0 &&
                 awardPredictions.length === 0 && (
                   <p className="text-center text-gray-500 py-4">
-                    Aun no hay puntos registrados.
+                    {t("pointsBreakdown.noPoints")}
                   </p>
                 )}
             </>

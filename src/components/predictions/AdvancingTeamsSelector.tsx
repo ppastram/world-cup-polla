@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Team } from '@/lib/types';
 import { ADVANCING_ROUND_POINTS } from '@/lib/constants';
+import { useTranslation } from '@/i18n';
 
 interface AdvancingTeamsSelectorProps {
   teams: Team[];
@@ -20,13 +21,13 @@ function getPointsBadgeClass(points: number): string {
 }
 
 const ROUNDS = [
-  { key: 'round_32', label: 'Dieciseisavos de Final', count: 32, description: 'Top 2 de cada grupo + 8 mejores terceros' },
-  { key: 'round_16', label: 'Octavos de Final', count: 16, prev: 'round_32' },
-  { key: 'quarter', label: 'Cuartos de Final', count: 8, prev: 'round_16' },
-  { key: 'semi', label: 'Semifinales', count: 4, prev: 'quarter' },
-  { key: 'final', label: 'Final', count: 2, prev: 'semi' },
-  { key: 'third_place', label: 'Tercer Puesto', count: 1, prev: 'semi' },
-  { key: 'champion', label: 'Campeon', count: 1, prev: 'final' },
+  { key: 'round_32', labelKey: 'advancing.round32' as const, count: 32, descKey: 'advancing.round32Desc' as const },
+  { key: 'round_16', labelKey: 'advancing.round16' as const, count: 16, prev: 'round_32' },
+  { key: 'quarter', labelKey: 'advancing.quarter' as const, count: 8, prev: 'round_16' },
+  { key: 'semi', labelKey: 'advancing.semi' as const, count: 4, prev: 'quarter' },
+  { key: 'final', labelKey: 'advancing.final' as const, count: 2, prev: 'semi' },
+  { key: 'third_place', labelKey: 'advancing.thirdPlace' as const, count: 1, prev: 'semi' },
+  { key: 'champion', labelKey: 'advancing.championLabel' as const, count: 1, prev: 'final' },
 ] as const;
 
 export default function AdvancingTeamsSelector({
@@ -37,6 +38,7 @@ export default function AdvancingTeamsSelector({
   autoRound32,
   pointsMap = {},
 }: AdvancingTeamsSelectorProps) {
+  const { t } = useTranslation();
   const [expandedRound, setExpandedRound] = useState<string>(autoRound32 ? 'round_32' : 'round_32');
 
   const isAutoMode = !!autoRound32;
@@ -168,16 +170,16 @@ export default function AdvancingTeamsSelector({
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-semibold text-white">
-                    {round.label}
+                    {t(round.labelKey)}
                     {isRound32Auto && (
-                      <span className="text-xs text-blue-400 font-normal ml-2">· Auto</span>
+                      <span className="text-xs text-blue-400 font-normal ml-2">· {t('advancing.auto')}</span>
                     )}
                     <span className="text-xs text-gray-500 font-normal ml-2">
-                      · {ADVANCING_ROUND_POINTS[round.key]} pts c/u
+                      · {t('advancing.ptsEach', { pts: ADVANCING_ROUND_POINTS[round.key] })}
                     </span>
                   </p>
-                  {'description' in round && (
-                    <p className="text-xs text-gray-500">{round.description}</p>
+                  {'descKey' in round && round.descKey && (
+                    <p className="text-xs text-gray-500">{t(round.descKey)}</p>
                   )}
                 </div>
               </div>
@@ -200,7 +202,7 @@ export default function AdvancingTeamsSelector({
                   // Auto round_32 display
                   effectiveRound32.length === 0 ? (
                     <p className="text-sm text-gray-500 py-4 text-center">
-                      Completa predicciones de grupo para ver clasificados
+                      {t('advancing.completeGroups')}
                     </p>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-3">
@@ -240,13 +242,13 @@ export default function AdvancingTeamsSelector({
                   <>
                     {!hasPrevSelection && (round.key as string) !== 'round_32' ? (
                       <p className="text-sm text-gray-500 py-4 text-center">
-                        Primero selecciona los equipos de la ronda anterior
+                        {t('advancing.selectPrevious')}
                       </p>
                     ) : (
                       <>
                         {selected.length >= round.count && (
                           <p className="text-xs text-gold-400 mt-3 mb-2">
-                            Seleccion completa ({round.count}/{round.count})
+                            {t('advancing.selectionComplete', { count: round.count, total: round.count })}
                           </p>
                         )}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mt-3">

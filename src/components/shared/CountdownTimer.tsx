@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from '@/i18n';
 
 interface CountdownTimerProps {
   targetDate: Date;
@@ -30,6 +31,7 @@ function calculateTimeLeft(targetDate: Date): TimeLeft | null {
 }
 
 export default function CountdownTimer({ targetDate, label }: CountdownTimerProps) {
+  const { t } = useTranslation();
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(calculateTimeLeft(targetDate));
 
   useEffect(() => {
@@ -44,16 +46,16 @@ export default function CountdownTimer({ targetDate, label }: CountdownTimerProp
     return (
       <div className="text-center">
         {label && <p className="text-sm text-gray-400 mb-2">{label}</p>}
-        <p className="text-red-400 font-semibold">Tiempo agotado</p>
+        <p className="text-red-400 font-semibold">{t("countdown.expired")}</p>
       </div>
     );
   }
 
   const units = [
-    { value: timeLeft.days, label: 'Dias' },
-    { value: timeLeft.hours, label: 'Horas' },
-    { value: timeLeft.minutes, label: 'Min' },
-    { value: timeLeft.seconds, label: 'Seg' },
+    { value: timeLeft.days, label: t("countdown.days") },
+    { value: timeLeft.hours, label: t("countdown.hours") },
+    { value: timeLeft.minutes, label: t("countdown.min") },
+    { value: timeLeft.seconds, label: t("countdown.sec") },
   ];
 
   return (

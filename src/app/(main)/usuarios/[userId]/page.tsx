@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Lock, Loader2, Trophy, Star, Target } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { TOURNAMENT_START, STAGES_LABELS } from '@/lib/constants';
+import { TOURNAMENT_START } from '@/lib/constants';
 import MatchCard from '@/components/matches/MatchCard';
 import TeamFlag from '@/components/shared/TeamFlag';
 import MascotAvatar from '@/components/shared/MascotAvatar';
+import { useTranslation } from '@/i18n';
 import type {
   Profile,
   Match,
@@ -19,17 +20,10 @@ import type {
 
 type MatchWithTeams = Match & { home_team?: Team; away_team?: Team };
 
-const AWARD_LABELS: Record<string, string> = {
-  golden_ball: 'Balon de Oro',
-  golden_boot: 'Bota de Oro',
-  golden_glove: 'Guante de Oro',
-  best_young: 'Mejor Joven',
-  total_goals: 'Total de Goles',
-};
-
 export default function UserPredictionsPage() {
   const params = useParams();
   const userId = params.userId as string;
+  const { t } = useTranslation();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [matches, setMatches] = useState<MatchWithTeams[]>([]);
@@ -40,11 +34,26 @@ export default function UserPredictionsPage() {
 
   const isTournamentStarted = new Date() >= TOURNAMENT_START;
 
+  const stageLabel = (stage: string) => {
+    const key = `stage.${stage}` as Parameters<typeof t>[0];
+    return t(key) || stage;
+  };
+
+  const awardLabel = (type: string) => {
+    const map: Record<string, string> = {
+      golden_ball: t('awards.goldenBall'),
+      golden_boot: t('awards.goldenBoot'),
+      golden_glove: t('awards.goldenGlove'),
+      best_young: t('awards.bestYoung'),
+      total_goals: t('awards.totalGoals'),
+    };
+    return map[type] || type;
+  };
+
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
 
-      // Always fetch profile
       const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
@@ -58,7 +67,6 @@ export default function UserPredictionsPage() {
         return;
       }
 
-      // Fetch matches + predictions only after tournament start
       const [matchesRes, matchPredRes, advRes, awardRes] = await Promise.all([
         supabase
           .from('matches')
@@ -100,40 +108,37 @@ export default function UserPredictionsPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      {/* User Header */}
       <div className="flex items-center gap-4">
         <MascotAvatar avatarUrl={profile?.avatar_url} displayName={profile?.display_name || '?'} size="lg" />
         <div>
           <h1 className="text-2xl font-bold text-white">
-            {profile?.display_name ?? 'Usuario'}
+            {profile?.display_name ?? t('userPredictions.user')}
           </h1>
-          <p className="text-sm text-gray-500">Predicciones</p>
+          <p className="text-sm text-gray-500">{t('userPredictions.predictions')}</p>
         </div>
       </div>
 
-      {/* Pre-tournament lock */}
       {!isTournamentStarted && (
         <div className="bg-wc-card border border-wc-border rounded-xl p-12 text-center">
           <Lock className="w-12 h-12 text-gray-700 mx-auto mb-4" />
           <p className="text-lg font-semibold text-gray-400 mb-2">
-            Las predicciones seran visibles cuando comience el mundial
+            {t('userPredictions.lockedTitle')}
           </p>
           <p className="text-sm text-gray-600">
-            Las predicciones se desbloquean el 11 de junio de 2026.
+            {t('userPredictions.lockedDesc')}
           </p>
         </div>
       )}
 
-      {/* Match predictions */}
       {isTournamentStarted && (
         <>
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
               <Target className="w-5 h-5 text-gold-400" />
-              Predicciones de Partidos
+              {t('userPredictions.matchPredictions')}
             </h2>
             {matches.length === 0 ? (
-              <p className="text-gray-500 text-sm">No hay partidos cargados.</p>
+              <p className="text-gray-500 text-sm">{t('userPredictions.noMatches')}</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {matches.map((match) => {
@@ -163,12 +168,11 @@ export default function UserPredictionsPage() {
             )}
           </div>
 
-          {/* Advancing predictions */}
           {advancingPredictions.length > 0 && (
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
                 <Trophy className="w-5 h-5 text-gold-400" />
-                Equipos Clasificados
+                {t('userPredictions.advancingTeams')}
               </h2>
               <div className="bg-wc-card border border-wc-border rounded-xl divide-y divide-wc-border">
                 {advancingPredictions.map((pred) => (
@@ -179,7 +183,7 @@ export default function UserPredictionsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-gray-500">
-                        {STAGES_LABELS[pred.round] ?? pred.round}
+                        {stageLabel(pred.round)}
                       </span>
                       {pred.points_earned !== null && (
                         <span className={`text-xs font-bold ${
@@ -195,25 +199,24 @@ export default function UserPredictionsPage() {
             </div>
           )}
 
-          {/* Award predictions */}
           {awardPredictions.length > 0 && (
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
                 <Star className="w-5 h-5 text-gold-400" />
-                Premios Individuales
+                {t('userPredictions.individualAwards')}
               </h2>
               <div className="bg-wc-card border border-wc-border rounded-xl divide-y divide-wc-border">
                 {awardPredictions.map((pred) => (
                   <div key={pred.id} className="flex items-center justify-between px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-gray-200">
-                        {AWARD_LABELS[pred.award_type] ?? pred.award_type}
+                        {awardLabel(pred.award_type)}
                       </p>
                       <p className="text-xs text-gray-500">
                         {pred.player_name ??
                           (pred.total_goals_guess !== null
-                            ? `${pred.total_goals_guess} goles`
-                            : 'Sin prediccion')}
+                            ? t('userPredictions.goals', { count: pred.total_goals_guess })
+                            : t('userPredictions.noPrediction'))}
                       </p>
                     </div>
                     {pred.points_earned !== null && (
