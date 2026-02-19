@@ -5,6 +5,7 @@ import { Save, RefreshCw, Loader2, CheckCircle, Plus, Minus } from "lucide-react
 import { createClient } from "@/lib/supabase/client";
 import type { Match, Team, ActualAdvancing } from "@/lib/types";
 import { STAGES_LABELS } from "@/lib/constants";
+import { calculateGroupStandings } from "@/lib/group-standings";
 
 type MatchWithTeams = Match & { home_team: Team; away_team: Team };
 
@@ -106,8 +107,6 @@ export default function AdminResultadosPage() {
       return hasScores;
     });
 
-    if (matchesToSave.length === 0) return;
-
     setSavingAll(true);
     setSaveAllMessage(null);
     const supabase = createClient();
@@ -154,6 +153,41 @@ export default function AdminResultadosPage() {
       // Score ALL match predictions server-side (bypasses RLS)
       const { error: scoreError } = await supabase.rpc("score_match_predictions");
       if (scoreError) throw scoreError;
+
+      // Auto-compute actual round_32 advancing teams from real match results
+      const groupMatches = matches.filter((m) => m.stage === "group");
+      const actualResultsMap: Record<string, { home: number; away: number }> = {};
+      for (const m of groupMatches) {
+        const s = scores[m.id];
+        if (s && s.home !== "" && s.away !== "") {
+          actualResultsMap[m.id] = { home: parseInt(s.home), away: parseInt(s.away) };
+        }
+      }
+
+      if (Object.keys(actualResultsMap).length > 0) {
+        const standings = calculateGroupStandings(allTeams, groupMatches, actualResultsMap);
+        const qualifiedTeamIds = standings.allQualified;
+
+        if (qualifiedTeamIds.length > 0) {
+          // Delete old round_32 actual advancing, then insert new
+          await supabase
+            .from("actual_advancing")
+            .delete()
+            .eq("round", "round_32");
+
+          const { error: advInsertError } = await supabase
+            .from("actual_advancing")
+            .insert(qualifiedTeamIds.map((teamId) => ({ team_id: teamId, round: "round_32" })));
+          if (advInsertError) throw advInsertError;
+        }
+      }
+
+      // Score advancing and award predictions
+      const { error: advError } = await supabase.rpc("score_advancing_predictions");
+      if (advError) throw advError;
+
+      const { error: awardError } = await supabase.rpc("score_award_predictions");
+      if (awardError) throw awardError;
 
       await supabase.rpc("recalculate_leaderboard");
 

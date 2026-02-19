@@ -39,71 +39,49 @@ export default function EstadisticasPage() {
     async function fetchStats() {
       const supabase = createClient();
 
-      // 1. Champion picks
-      const { data: champData } = await supabase
-        .from('advancing_predictions')
-        .select('team_id, team:teams(*)')
-        .eq('round', 'champion');
+      // 1. Champion picks (RPC bypasses RLS to include all users)
+      const { data: champData } = await supabase.rpc('get_champion_picks');
 
-      if (champData) {
-        const countMap: Record<string, { team: Team; count: number }> = {};
-        for (const row of champData as unknown as { team_id: string; team: Team }[]) {
-          if (!row.team) continue;
-          if (!countMap[row.team_id]) {
-            countMap[row.team_id] = { team: row.team, count: 0 };
-          }
-          countMap[row.team_id].count++;
-        }
-        const totalPicks = champData.length || 1;
-        const sorted = Object.values(countMap)
-          .map((entry) => ({
-            ...entry,
-            percentage: Math.round((entry.count / totalPicks) * 100),
+      if (champData && champData.length > 0) {
+        const totalPicks = champData.reduce((sum: number, r: any) => sum + Number(r.pick_count), 0);
+        setChampionPicks(
+          champData.map((r: any) => ({
+            team: { id: r.team_id, name: r.team_name, code: r.team_code, flag_url: r.flag_url } as Team,
+            count: Number(r.pick_count),
+            percentage: Math.round((Number(r.pick_count) / totalPicks) * 100),
           }))
-          .sort((a, b) => b.count - a.count);
-        setChampionPicks(sorted);
+        );
       }
 
-      // 2. Group winner picks (most picked team to advance per group, round_32 level)
-      const { data: advData } = await supabase
-        .from('advancing_predictions')
-        .select('team_id, team:teams(*)')
-        .eq('round', 'round_32');
+      // 2. Group winner picks (RPC bypasses RLS to include all users)
+      const { data: advData } = await supabase.rpc('get_round32_picks');
 
-      if (advData) {
-        const groupMap: Record<string, Record<string, { team: Team; count: number }>> = {};
-        for (const row of advData as unknown as { team_id: string; team: Team }[]) {
-          if (!row.team) continue;
-          const g = row.team.group_letter;
-          if (!groupMap[g]) groupMap[g] = {};
-          if (!groupMap[g][row.team_id]) {
-            groupMap[g][row.team_id] = { team: row.team, count: 0 };
-          }
-          groupMap[g][row.team_id].count++;
-        }
+      if (advData && advData.length > 0) {
         const result: Record<string, GroupWinnerPick[]> = {};
-        for (const [letter, teams] of Object.entries(groupMap)) {
-          result[letter] = Object.values(teams)
-            .map((t) => ({ group_letter: letter, ...t }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 4);
+        for (const r of advData as any[]) {
+          const letter = r.group_letter;
+          if (!result[letter]) result[letter] = [];
+          result[letter].push({
+            group_letter: letter,
+            team: { id: r.team_id, name: r.team_name, code: r.team_code, flag_url: r.flag_url } as Team,
+            count: Number(r.pick_count),
+          });
+        }
+        // Keep top 4 per group
+        for (const letter of Object.keys(result)) {
+          result[letter] = result[letter].slice(0, 4);
         }
         setGroupWinners(result);
       }
 
-      // 3. Average total goals guess
-      const { data: goalsData } = await supabase
-        .from('award_predictions')
-        .select('total_goals_guess')
-        .eq('award_type', 'total_goals')
-        .not('total_goals_guess', 'is', null);
+      // 3. Average total goals guess (RPC bypasses RLS)
+      const { data: goalsData } = await supabase.rpc('get_avg_total_goals');
 
-      if (goalsData && goalsData.length > 0) {
-        const sum = goalsData.reduce((acc, r) => acc + (r.total_goals_guess ?? 0), 0);
-        setAvgTotalGoals(Math.round(sum / goalsData.length));
+      if (goalsData && goalsData.length > 0 && goalsData[0].avg_goals !== null) {
+        setAvgTotalGoals(Number(goalsData[0].avg_goals));
       }
 
-      // 3b. Actual total goals scored in finished matches
+      // 3b. Actual total goals scored in finished matches (matches table has public read)
       const { data: finishedMatches } = await supabase
         .from('matches')
         .select('home_score, away_score')
@@ -117,7 +95,7 @@ export default function EstadisticasPage() {
         setActualTotalGoals({ goals: totalGoals, matches: finishedMatches.length });
       }
 
-      // 4. Consensus scores for upcoming matches
+      // 4. Consensus scores for upcoming matches (RPC bypasses RLS)
       const { data: upcomingMatches } = await supabase
         .from('matches')
         .select('id, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
@@ -127,31 +105,25 @@ export default function EstadisticasPage() {
 
       if (upcomingMatches && upcomingMatches.length > 0) {
         const matchIds = upcomingMatches.map((m) => m.id);
-        const { data: predData } = await supabase
-          .from('match_predictions')
-          .select('match_id, home_score, away_score')
-          .in('match_id', matchIds);
+        const { data: predData } = await supabase.rpc('get_consensus_scores', { match_ids: matchIds });
 
         if (predData) {
-          const aggMap: Record<string, { homeSum: number; awaySum: number; count: number }> = {};
-          for (const p of predData) {
-            if (!aggMap[p.match_id]) aggMap[p.match_id] = { homeSum: 0, awaySum: 0, count: 0 };
-            aggMap[p.match_id].homeSum += p.home_score;
-            aggMap[p.match_id].awaySum += p.away_score;
-            aggMap[p.match_id].count++;
+          const predMap: Record<string, any> = {};
+          for (const p of predData as any[]) {
+            predMap[p.match_id] = p;
           }
 
           const consensus: ConsensusScore[] = [];
           for (const match of upcomingMatches as unknown as { id: string; home_team: Team; away_team: Team }[]) {
-            const agg = aggMap[match.id];
-            if (!agg || agg.count === 0) continue;
+            const agg = predMap[match.id];
+            if (!agg) continue;
             consensus.push({
               match_id: match.id,
               home_team: match.home_team,
               away_team: match.away_team,
-              avg_home: Math.round((agg.homeSum / agg.count) * 10) / 10,
-              avg_away: Math.round((agg.awaySum / agg.count) * 10) / 10,
-              total_predictions: agg.count,
+              avg_home: Number(agg.avg_home),
+              avg_away: Number(agg.avg_away),
+              total_predictions: Number(agg.total_predictions),
             });
           }
           setConsensusScores(consensus);

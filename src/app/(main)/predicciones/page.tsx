@@ -81,27 +81,6 @@ export default function PrediccionesPage() {
         .select('*')
         .eq('user_id', user!.id);
 
-      // Fetch actual advancing teams entered by admin (round + team_id)
-      const { data: actualAdvData } = await supabase
-        .from('actual_advancing')
-        .select('round, team_id');
-
-      // Build sets: which teams advanced per round, and which rounds are fully entered
-      const actualTeamsPerRound: Record<string, Set<string>> = {};
-      for (const row of actualAdvData || []) {
-        if (!actualTeamsPerRound[row.round]) actualTeamsPerRound[row.round] = new Set();
-        actualTeamsPerRound[row.round].add(row.team_id);
-      }
-      const expectedPerRound: Record<string, number> = {
-        round_32: 32, round_16: 16, quarter: 8, semi: 4,
-        final: 2, third_place: 1, champion: 1,
-      };
-      const completedRounds = new Set(
-        Object.entries(actualTeamsPerRound)
-          .filter(([round, teamSet]) => teamSet.size >= (expectedPerRound[round] ?? 0))
-          .map(([round]) => round)
-      );
-
       if (teamsData) setTeams(teamsData);
       if (matchesData) setMatches(matchesData);
 
@@ -114,52 +93,35 @@ export default function PrediccionesPage() {
         setMatchPredictions(map);
       }
 
-      // Build advancing predictions map + points map (cap to max per round)
-      // Show points only when we can determine the outcome:
-      //   - Team IS in actual_advancing → show positive score immediately
-      //   - Team NOT in actual_advancing + round fully entered → show 0 (eliminated)
-      //   - Team NOT in actual_advancing + round NOT fully entered → show nothing (null)
+      // Build advancing predictions map + points map
+      // Trust the DB: points_earned is set by score_advancing_predictions() RPC.
+      // NULL = not yet scored, 0 = wrong, positive = correct.
       if (advancingPreds) {
         const map: Record<string, string[]> = {};
         const pointsMap: Record<string, Record<string, number | null>> = {};
         for (const p of advancingPreds) {
           if (!map[p.round]) map[p.round] = [];
-          const max = expectedPerRound[p.round] ?? 32;
-          if (map[p.round].length >= max) continue; // skip excess
           map[p.round].push(p.team_id);
 
-          const actualTeams = actualTeamsPerRound[p.round];
-          if (!actualTeams) continue; // admin hasn't entered anything for this round
-
-          const teamConfirmed = actualTeams.has(p.team_id);
-          const roundComplete = completedRounds.has(p.round);
-
-          if (teamConfirmed || roundComplete) {
-            // Team confirmed advancing → show positive points
-            // OR round complete and team not in it → show 0
+          if (p.points_earned !== null && p.points_earned !== undefined) {
             if (!pointsMap[p.round]) pointsMap[p.round] = {};
-            pointsMap[p.round][p.team_id] = p.points_earned ?? (teamConfirmed ? null : 0);
+            pointsMap[p.round][p.team_id] = p.points_earned;
           }
-          // Otherwise: round incomplete and team not confirmed → show nothing
         }
         setAdvancingPredictions(map);
         setAdvancingPoints(pointsMap);
       }
 
       // Build award predictions map
-      // Only show scores once the admin has entered actual award results
-      const { data: actualAwardsData } = await supabase
-        .from('actual_awards')
-        .select('award_type');
-      const scoredAwards = new Set((actualAwardsData || []).map((r) => r.award_type));
-
+      // Trust the DB: points_earned is set by score_award_predictions() RPC.
+      // NULL = not yet scored, 0+ = scored.
       if (awardPreds) {
         const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }> = {};
         for (const p of awardPreds) {
           map[p.award_type] = {
             player_name: p.player_name || undefined,
             total_goals_guess: p.total_goals_guess ?? undefined,
-            points_earned: scoredAwards.has(p.award_type) ? p.points_earned : null,
+            points_earned: p.points_earned ?? null,
           };
         }
         setAwardPredictions(map);
@@ -238,9 +200,17 @@ export default function PrediccionesPage() {
           }
         }
         if (advUpserts.length > 0) {
+          // Delete all old advancing predictions first to remove stale entries
+          // (upsert alone doesn't remove teams no longer in the selection)
+          const { error: delError } = await supabase
+            .from('advancing_predictions')
+            .delete()
+            .eq('user_id', user.id);
+          if (delError) throw delError;
+
           const { error } = await supabase
             .from('advancing_predictions')
-            .upsert(advUpserts, { onConflict: 'user_id,team_id,round' });
+            .insert(advUpserts);
           if (error) throw error;
         }
       }

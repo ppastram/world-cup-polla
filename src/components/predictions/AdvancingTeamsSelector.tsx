@@ -57,19 +57,30 @@ export default function AdvancingTeamsSelector({
         return a.name.localeCompare(b.name);
       });
     }
+
+    let baseIds: Set<string>;
+
     // Third place: show semi teams NOT in the final
     if (round.key === 'third_place') {
       const semiTeams = predictions['semi'] || [];
       const finalTeams = predictions['final'] || [];
-      return teams
-        .filter((t) => semiTeams.includes(t.id) && !finalTeams.includes(t.id))
-        .sort((a, b) => a.name.localeCompare(b.name));
+      baseIds = new Set(semiTeams.filter((id) => !finalTeams.includes(id)));
+    } else {
+      const prevKey = round.prev;
+      if (!prevKey) return [];
+      const prevSelected = prevKey === 'round_32' ? effectiveRound32 : (predictions[prevKey] || []);
+      baseIds = new Set(prevSelected);
     }
-    const prevKey = round.prev;
-    if (!prevKey) return [];
-    const prevSelected = prevKey === 'round_32' ? effectiveRound32 : (predictions[prevKey] || []);
+
+    // Also include any teams already selected for this round (saved predictions
+    // may reference teams no longer in the previous round's live pool)
+    const selectedForRound = predictions[round.key] || [];
+    for (const id of selectedForRound) {
+      baseIds.add(id);
+    }
+
     return teams
-      .filter((t) => prevSelected.includes(t.id))
+      .filter((t) => baseIds.has(t.id))
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
