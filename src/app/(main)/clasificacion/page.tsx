@@ -4,13 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { Trophy, DollarSign, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslation } from '@/i18n';
-import { FIXED_PRIZES } from '@/lib/constants';
 import LeaderboardTable from '@/components/leaderboard/LeaderboardTable';
 import PointsBreakdown from '@/components/leaderboard/PointsBreakdown';
 import type { LeaderboardEntry } from '@/lib/types';
 
 export default function ClasificacionPage() {
-  const { t, formatCurrency } = useTranslation();
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -75,19 +74,19 @@ export default function ClasificacionPage() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-wc-darker rounded-lg p-3">
             <p className="text-yellow-400 font-bold text-lg">
-              {formatCurrency(FIXED_PRIZES.firstPlace)}
+              {t("landing.1stPrize")}
             </p>
             <p className="text-gray-500 text-xs">{t("leaderboard.1stPlace")}</p>
           </div>
           <div className="bg-wc-darker rounded-lg p-3">
             <p className="text-gray-300 font-bold text-lg">
-              {formatCurrency(FIXED_PRIZES.secondPlace)}
+              {t("landing.2ndPrize")}
             </p>
             <p className="text-gray-500 text-xs">{t("leaderboard.2ndPlace")}</p>
           </div>
           <div className="bg-wc-darker rounded-lg p-3">
             <p className="text-gray-300 font-bold text-lg">
-              {formatCurrency(FIXED_PRIZES.thirdPlace)}
+              {t("landing.3rdPrize")}
             </p>
             <p className="text-gray-500 text-xs">{t("leaderboard.3rdPlace")}</p>
           </div>
