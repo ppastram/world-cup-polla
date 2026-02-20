@@ -25,7 +25,7 @@ const GROUP_STEPS: string[][] = [
 
 export default function PrediccionesPage() {
   const { user, profile, loading: userLoading } = useUser();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const supabase = createClient();
 
   const [teams, setTeams] = useState<Team[]>([]);
@@ -246,7 +246,7 @@ export default function PrediccionesPage() {
           await fetch('/api/email/send-predictions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id }),
+            body: JSON.stringify({ userId: user.id, locale }),
           });
         } catch (emailErr) {
           console.error('Failed to send predictions email:', emailErr);
@@ -259,7 +259,7 @@ export default function PrediccionesPage() {
     } finally {
       setSaving(false);
     }
-  }, [user, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32, t]);
+  }, [user, matches, matchPredictions, advancingPredictions, awardPredictions, isPastDeadline, supabase, autoRound32, t, locale]);
 
   const groupMatchCount = matches.filter(
     (m) => m.stage === 'group' && m.home_team && m.away_team
