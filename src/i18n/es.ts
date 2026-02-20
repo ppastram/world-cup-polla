@@ -21,7 +21,7 @@ const es = {
   "landing.worldCupStartsIn": "El Mundial comienza en",
   "landing.register": "Registrarme",
   "landing.login": "Iniciar sesión",
-  "landing.prizePool": "Pozo Acumulado",
+  "landing.prizePool": "Premios",
   "landing.participants": "{count} participante{s} inscrito{s2}",
   "landing.1stPlace": "1er Lugar",
   "landing.2ndPlace": "2do Lugar",
@@ -32,15 +32,16 @@ const es = {
   "landing.feature2Desc": "Compara tus predicciones con tus amigos. Tabla de posiciones en tiempo real durante el mundial.",
   "landing.feature3Title": "Gana",
   "landing.feature3Desc": "El mejor predictor se lleva $20 millones. Segundo lugar $5 millones. Tercer lugar recupera su entrada de {entryFee}.",
-  "landing.scoringSystem": "Sistema de Puntos",
-  "landing.matches": "Partidos",
-  "landing.exactScore": "Marcador exacto",
-  "landing.resultAndDiff": "Resultado + diferencia",
-  "landing.correctResult": "Resultado correcto",
-  "landing.advancing": "Clasificados",
-  "landing.champion": "Campeón",
-  "landing.finalists": "Finalistas",
-  "landing.semifinalists": "Semifinalistas",
+  "landing.scoringSystem": "Reglas",
+  "landing.scoringCategory1": "Partidos",
+  "landing.scoringCategory1Desc": "Predice el marcador de los 48 partidos de fase de grupos. Mientras más preciso, más puntos.",
+  "landing.scoringCategory2": "Equipos clasificados",
+  "landing.scoringCategory2Desc": "Elige qué equipos avanzan a cada ronda eliminatoria, desde dieciseisavos hasta el campeón.",
+  "landing.scoringCategory3": "Premios individuales",
+  "landing.scoringCategory3Desc": "Adivina el Balón de Oro, Bota de Oro, Guante de Oro, Mejor Joven y total de goles del torneo.",
+  "landing.scoringCategory4": "Lobo Solitario x2",
+  "landing.scoringCategory4Desc": "Si eres el único en acertar una predicción, ¡tus puntos se duplican!",
+  "landing.viewFullRules": "Ver reglas completas",
   "landing.footer": "Ampolla Mundialista 2026 — México · United States · Canada",
 
   // Countdown
@@ -148,7 +149,7 @@ const es = {
   // Leaderboard
   "leaderboard.title": "Clasificación",
   "leaderboard.subtitle": "Tabla de posiciones en tiempo real",
-  "leaderboard.prizePool": "Pozo Acumulado",
+  "leaderboard.prizePool": "Premios",
   "leaderboard.participants": "{count} participante{s} inscrito{s2}",
   "leaderboard.1stPlace": "1er Lugar",
   "leaderboard.2ndPlace": "2do Lugar",
@@ -171,6 +172,7 @@ const es = {
   "pointsBreakdown.advancing": "Clasificados",
   "pointsBreakdown.awardsLabel": "Premios",
   "pointsBreakdown.goals": "{count} goles",
+  "pointsBreakdown.loneWolf": "Lobo Solitario x2",
 
   // Matches
   "matches.title": "Partidos",
@@ -187,6 +189,9 @@ const es = {
   "matches.finished": "Finalizado",
   "matches.tbd": "Por definir",
   "matches.yourPrediction": "Tu predicción:",
+  "matches.exactScores": "Marcador exacto",
+  "matches.exactScoresDesc": "Jugadores que acertaron el marcador exacto",
+  "matches.noExactScores": "Nadie acertó el marcador exacto",
 
   // Stats
   "stats.title": "Estadísticas",
@@ -276,6 +281,10 @@ const es = {
   "rules.faq5A": "Las predicciones de todos los participantes se hacen visibles a partir del 11 de junio de 2026, cuando comienza el Mundial. Antes de esa fecha, solo puedes ver las tuyas.",
   "rules.faq6Q": "¿Qué pasa con los partidos que van a penales?",
   "rules.faq6A": "Para la fase de grupos, solo aplica el resultado en los 90 minutos. Para las predicciones de equipos clasificados, lo que importa es que el equipo avance, independientemente de cómo.",
+
+  // Lone Wolf
+  "rules.loneWolf": "Bonus Lobo Solitario",
+  "rules.loneWolfDesc": "Si eres el ÚNICO participante en acertar una predicción, tus puntos para esa predicción se duplican. Aplica para: marcadores exactos (5→10 pts), equipos clasificados y premios individuales. ¡Arriésgate con predicciones únicas!",
 
   // Payment
   "payment.title": "Pago",

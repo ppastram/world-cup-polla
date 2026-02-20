@@ -85,9 +85,12 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
 
   if (!isOpen) return null;
 
-  const totalMatchPoints = matchPredictions.reduce((sum, p) => sum + (p.points_earned ?? 0), 0);
-  const totalAdvancingPoints = advancingPredictions.reduce((sum, p) => sum + (p.points_earned ?? 0), 0);
-  const totalAwardPoints = awardPredictions.reduce((sum, p) => sum + (p.points_earned ?? 0), 0);
+  const effectivePoints = (p: { points_earned: number | null; is_lone_wolf: boolean }) =>
+    p.is_lone_wolf ? (p.points_earned ?? 0) * 2 : (p.points_earned ?? 0);
+
+  const totalMatchPoints = matchPredictions.reduce((sum, p) => sum + effectivePoints(p), 0);
+  const totalAdvancingPoints = advancingPredictions.reduce((sum, p) => sum + effectivePoints(p), 0);
+  const totalAwardPoints = awardPredictions.reduce((sum, p) => sum + effectivePoints(p), 0);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -150,7 +153,9 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                     {matchPredictions.map((pred) => (
                       <div
                         key={pred.id}
-                        className="flex items-center justify-between bg-wc-darker rounded-lg px-3 py-2"
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                          pred.is_lone_wolf ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-wc-darker'
+                        }`}
                       >
                         <div className="flex items-center gap-2 text-xs text-gray-400 min-w-0">
                           <span className="truncate">
@@ -161,10 +166,15 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                           <span className="text-xs text-gray-500">
                             {pred.home_score}-{pred.away_score}
                           </span>
+                          {pred.is_lone_wolf && (
+                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded">
+                              {t("pointsBreakdown.loneWolf")}
+                            </span>
+                          )}
                           <span className={`text-sm font-bold ${
-                            (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
+                            pred.is_lone_wolf ? 'text-purple-400' : (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
                           }`}>
-                            +{pred.points_earned ?? 0}
+                            +{effectivePoints(pred)}
                           </span>
                         </div>
                       </div>
@@ -184,7 +194,9 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                     {advancingPredictions.map((pred) => (
                       <div
                         key={pred.id}
-                        className="flex items-center justify-between bg-wc-darker rounded-lg px-3 py-2"
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                          pred.is_lone_wolf ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-wc-darker'
+                        }`}
                       >
                         <div className="flex items-center gap-2 text-xs text-gray-400">
                           {pred.team && (
@@ -200,11 +212,18 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                             {stageLabel(pred.round)}
                           </span>
                         </div>
-                        <span className={`text-sm font-bold ${
-                          (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
-                        }`}>
-                          +{pred.points_earned ?? 0}
-                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {pred.is_lone_wolf && (
+                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded">
+                              {t("pointsBreakdown.loneWolf")}
+                            </span>
+                          )}
+                          <span className={`text-sm font-bold ${
+                            pred.is_lone_wolf ? 'text-purple-400' : (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
+                          }`}>
+                            +{effectivePoints(pred)}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -223,7 +242,9 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                       return (
                         <div
                           key={pred.id}
-                          className="flex items-center justify-between bg-wc-darker rounded-lg px-3 py-2"
+                          className={`flex items-center justify-between rounded-lg px-3 py-2 ${
+                            pred.is_lone_wolf ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-wc-darker'
+                          }`}
                         >
                           <div className="text-xs text-gray-400">
                             <span>{awardLabel(pred.award_type)}</span>
@@ -231,11 +252,18 @@ export default function PointsBreakdown({ userId, isOpen, onClose }: PointsBreak
                               {pred.player_name ?? (pred.total_goals_guess !== null ? t("pointsBreakdown.goals", { count: pred.total_goals_guess }) : '')}
                             </span>
                           </div>
-                          <span className={`text-sm font-bold ${
-                            (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
-                          }`}>
-                            +{pred.points_earned ?? 0}
-                          </span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {pred.is_lone_wolf && (
+                              <span className="text-[10px] font-bold text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded">
+                                {t("pointsBreakdown.loneWolf")}
+                              </span>
+                            )}
+                            <span className={`text-sm font-bold ${
+                              pred.is_lone_wolf ? 'text-purple-400' : (pred.points_earned ?? 0) > 0 ? 'text-gold-400' : 'text-gray-600'
+                            }`}>
+                              +{effectivePoints(pred)}
+                            </span>
+                          </div>
                         </div>
                       );
                     })}

@@ -59,6 +59,7 @@ export interface MatchPrediction {
   home_score: number;
   away_score: number;
   points_earned: number | null;
+  is_lone_wolf: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +79,7 @@ export interface AdvancingPrediction {
   team_id: string;
   round: AdvancingRound;
   points_earned: number | null;
+  is_lone_wolf: boolean;
   created_at: string;
   // Joined
   team?: Team;
@@ -97,6 +99,7 @@ export interface AwardPrediction {
   player_name: string | null;
   total_goals_guess: number | null;
   points_earned: number | null;
+  is_lone_wolf: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, Users, Target, DollarSign, Globe } from "lucide-react";
+import { Trophy, Users, Target, Star, DollarSign, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TOURNAMENT_START, ENTRY_FEE_COP, FIXED_PRIZES } from "@/lib/constants";
 import { useTranslation } from "@/i18n";
@@ -185,41 +185,38 @@ export default function LandingPage() {
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             {t("landing.scoringSystem")}
           </h2>
-          <div className="grid sm:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-blue-400 font-semibold mb-3">{t("landing.matches")}</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex justify-between">
-                  <span>{t("landing.exactScore")}</span>
-                  <span className="text-yellow-300 font-bold">5 pts</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>{t("landing.resultAndDiff")}</span>
-                  <span className="text-yellow-300 font-bold">3 pts</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>{t("landing.correctResult")}</span>
-                  <span className="text-yellow-300 font-bold">2 pts</span>
-                </li>
-              </ul>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { icon: Target, title: t("landing.scoringCategory1"), desc: t("landing.scoringCategory1Desc") },
+              { icon: Trophy, title: t("landing.scoringCategory2"), desc: t("landing.scoringCategory2Desc") },
+              { icon: Star, title: t("landing.scoringCategory3"), desc: t("landing.scoringCategory3Desc") },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="bg-wc-darker rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="w-4 h-4 text-gold-400" />
+                    <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+                  </div>
+                  <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
+                </div>
+              );
+            })}
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-base">🐺</span>
+                <h3 className="text-sm font-semibold text-purple-400">{t("landing.scoringCategory4")}</h3>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">{t("landing.scoringCategory4Desc")}</p>
             </div>
-            <div>
-              <h3 className="text-blue-400 font-semibold mb-3">{t("landing.advancing")}</h3>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li className="flex justify-between">
-                  <span>{t("landing.champion")}</span>
-                  <span className="text-yellow-300 font-bold">20 pts</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>{t("landing.finalists")}</span>
-                  <span className="text-yellow-300 font-bold">12 pts</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>{t("landing.semifinalists")}</span>
-                  <span className="text-yellow-300 font-bold">8 pts</span>
-                </li>
-              </ul>
-            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <Link
+              href="/reglas"
+              className="text-sm text-gold-400 hover:text-gold-300 underline underline-offset-4 transition-colors"
+            >
+              {t("landing.viewFullRules")}
+            </Link>
           </div>
         </div>
       </div>

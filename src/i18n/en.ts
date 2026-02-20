@@ -34,15 +34,16 @@ const en: Record<TranslationKey, string> = {
   "landing.feature2Desc": "Compare your predictions with friends. Real-time leaderboard during the World Cup.",
   "landing.feature3Title": "Win",
   "landing.feature3Desc": "The best predictor wins $20 million COP. Second place $5 million. Third place gets their {entryFee} entry fee back.",
-  "landing.scoringSystem": "Scoring System",
-  "landing.matches": "Matches",
-  "landing.exactScore": "Exact score",
-  "landing.resultAndDiff": "Result + goal difference",
-  "landing.correctResult": "Correct result",
-  "landing.advancing": "Advancing Teams",
-  "landing.champion": "Champion",
-  "landing.finalists": "Finalists",
-  "landing.semifinalists": "Semifinalists",
+  "landing.scoringSystem": "Rules",
+  "landing.scoringCategory1": "Matches",
+  "landing.scoringCategory1Desc": "Predict the score of all 48 group stage matches. The more precise, the more points.",
+  "landing.scoringCategory2": "Advancing teams",
+  "landing.scoringCategory2Desc": "Pick which teams advance to each knockout round, from the round of 32 to the champion.",
+  "landing.scoringCategory3": "Individual awards",
+  "landing.scoringCategory3Desc": "Guess the Golden Ball, Golden Boot, Golden Glove, Best Young Player and total tournament goals.",
+  "landing.scoringCategory4": "Lone Wolf x2",
+  "landing.scoringCategory4Desc": "If you're the only one to get a prediction right, your points are doubled!",
+  "landing.viewFullRules": "View full rules",
   "landing.footer": "Ampolla Mundialista 2026 — Mexico · United States · Canada",
 
   // Countdown
@@ -173,6 +174,7 @@ const en: Record<TranslationKey, string> = {
   "pointsBreakdown.advancing": "Advancing",
   "pointsBreakdown.awardsLabel": "Awards",
   "pointsBreakdown.goals": "{count} goals",
+  "pointsBreakdown.loneWolf": "Lone Wolf x2",
 
   // Matches
   "matches.title": "Matches",
@@ -189,6 +191,9 @@ const en: Record<TranslationKey, string> = {
   "matches.finished": "Finished",
   "matches.tbd": "TBD",
   "matches.yourPrediction": "Your prediction:",
+  "matches.exactScores": "Exact scores",
+  "matches.exactScoresDesc": "Players who predicted the exact score",
+  "matches.noExactScores": "Nobody predicted the exact score",
 
   // Stats
   "stats.title": "Stats",
@@ -278,6 +283,10 @@ const en: Record<TranslationKey, string> = {
   "rules.faq5A": "All participants' predictions become visible starting June 11, 2026, when the World Cup begins. Before that date, you can only see your own.",
   "rules.faq6Q": "What happens with matches that go to penalties?",
   "rules.faq6A": "For the group stage, only the 90-minute result applies. For advancing team predictions, what matters is that the team advances, regardless of how.",
+
+  // Lone Wolf
+  "rules.loneWolf": "Lone Wolf Bonus",
+  "rules.loneWolfDesc": "If you are the ONLY participant to get a prediction right, your points for that prediction are doubled. Applies to: exact scores (5→10 pts), advancing teams, and individual awards. Take risks with unique predictions!",
 
   // Payment
   "payment.title": "Payment",

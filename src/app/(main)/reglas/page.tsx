@@ -121,6 +121,16 @@ export default function ReglasPage() {
         ]}
       />
 
+      <div className="bg-wc-card border border-purple-500/30 rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <span className="text-purple-400 text-xl">🐺</span>
+          {t('rules.loneWolf')}
+        </h3>
+        <p className="text-sm text-gray-400 leading-relaxed">
+          {t('rules.loneWolfDesc')}
+        </p>
+      </div>
+
       <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
           <Target className="w-5 h-5 text-gold-400" />
