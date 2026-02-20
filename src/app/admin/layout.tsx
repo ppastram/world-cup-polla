@@ -7,8 +7,18 @@ import { usePathname } from "next/navigation";
 import { Shield, FileText, CreditCard, Users, Settings, Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
+function BracketIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3 4h8v16H3" />
+      <path d="M11 12h10" />
+    </svg>
+  );
+}
+
 const adminNav = [
   { href: "/admin/resultados", label: "Resultados", icon: FileText },
+  { href: "/admin/llaves", label: "Llaves", icon: BracketIcon },
   { href: "/admin/avances", label: "Avances", icon: Trophy },
   { href: "/admin/pagos", label: "Pagos", icon: CreditCard },
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },

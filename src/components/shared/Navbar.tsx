@@ -27,6 +27,15 @@ import { useTranslation } from "@/i18n";
 import type { TranslationKey } from "@/i18n";
 import MascotAvatar from "@/components/shared/MascotAvatar";
 
+function BracketIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3 4h8v16H3" />
+      <path d="M11 12h10" />
+    </svg>
+  );
+}
+
 const mainNavItems: { href: string; labelKey: TranslationKey; icon: typeof Trophy }[] = [
   { href: "/predicciones", labelKey: "nav.predictions", icon: ClipboardList },
   { href: "/clasificacion", labelKey: "nav.leaderboard", icon: Trophy },
@@ -37,6 +46,7 @@ const mainNavItems: { href: string; labelKey: TranslationKey; icon: typeof Troph
 
 const moreNavItems: { href: string; labelKey: TranslationKey; icon: typeof Trophy }[] = [
   { href: "/partidos", labelKey: "nav.matches", icon: Calendar },
+  { href: "/llaves", labelKey: "nav.bracket", icon: BracketIcon as unknown as typeof Trophy },
   { href: "/estadisticas", labelKey: "nav.stats", icon: BarChart3 },
 ];
 

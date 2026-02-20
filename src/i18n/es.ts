@@ -433,6 +433,22 @@ const es = {
   "stage.third_place": "Tercer Puesto",
   "stage.final": "Final",
 
+  // Bracket
+  "bracket.title": "Llaves del Mundial",
+  "bracket.subtitle": "Fase eliminatoria del Mundial 2026",
+  "bracket.round32": "Dieciseisavos",
+  "bracket.round16": "Octavos",
+  "bracket.quarter": "Cuartos",
+  "bracket.semi": "Semifinales",
+  "bracket.final": "Final",
+  "bracket.thirdPlace": "Tercer Puesto",
+  "bracket.champion": "Campeón",
+  "bracket.empty": "Las llaves se llenarán a medida que avance el torneo",
+  "bracket.predictedBy": "Predicho por",
+  "bracket.noPredictions": "Nadie predijo este equipo en esta ronda",
+  "bracket.tbd": "Por definir",
+  "nav.bracket": "Llaves",
+
   // Common
   "common.loading": "Cargando...",
   "common.pts": "pts",

@@ -45,6 +45,7 @@ export interface Match {
   venue: string | null;
   external_id: number | null;
   manual_override?: boolean;
+  penalty_winner_id?: string | null;
   created_at: string;
   updated_at: string;
   // Joined

@@ -434,6 +434,22 @@ const en: Record<TranslationKey, string> = {
   "stage.third_place": "Third Place",
   "stage.final": "Final",
 
+  // Bracket
+  "bracket.title": "Tournament Bracket",
+  "bracket.subtitle": "World Cup 2026 knockout stage",
+  "bracket.round32": "Round of 32",
+  "bracket.round16": "Round of 16",
+  "bracket.quarter": "Quarters",
+  "bracket.semi": "Semis",
+  "bracket.final": "Final",
+  "bracket.thirdPlace": "Third Place",
+  "bracket.champion": "Champion",
+  "bracket.empty": "The bracket will be filled as the tournament progresses",
+  "bracket.predictedBy": "Predicted by",
+  "bracket.noPredictions": "Nobody predicted this team for this round",
+  "bracket.tbd": "TBD",
+  "nav.bracket": "Bracket",
+
   // Common
   "common.loading": "Loading...",
   "common.pts": "pts",
