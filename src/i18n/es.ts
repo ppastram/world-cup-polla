@@ -26,12 +26,46 @@ const es = {
   "landing.1stPlace": "1er Lugar",
   "landing.2ndPlace": "2do Lugar",
   "landing.3rdPlace": "3er Lugar",
+  "landing.entryFee": "Entrada: $300.000 COP",
+  "landing.1stPrize": "$20 millones",
+  "landing.2ndPrize": "$5 millones",
+  "landing.3rdPrize": "$300 mil",
+  
   "landing.feature1Title": "Predice",
   "landing.feature1Desc": "Ingresa tus predicciones para los 48 partidos de la fase de grupos, equipos clasificados y premios individuales.",
-  "landing.feature2Title": "Compite",
-  "landing.feature2Desc": "Compara tus predicciones con tus amigos. Tabla de posiciones en tiempo real durante el mundial.",
-  "landing.feature3Title": "Gana",
-  "landing.feature3Desc": "El mejor predictor se lleva $20 millones. Segundo lugar $5 millones. Tercer lugar recupera su entrada de {entryFee}.",
+  "landing.feature2Title": "Entre amigos",
+  "landing.feature2Desc": "Competencia entre amigos con total transparencia. Reglas claras y premios fijos.",
+  "landing.feature3Title": "Tu resumen por correo",
+  "landing.feature3Desc": "Al completar el 100% de tus predicciones, recibes un resumen completo por correo electrónico con todas tus apuestas.",
+
+  // How it works
+  "landing.howItWorks": "¿Cómo funciona?",
+  "landing.step1Title": "Regístrate",
+  "landing.step1Desc": "Crea tu cuenta y elige un avatar entre mascotas mundialistas y leyendas del fútbol.",
+  "landing.step2Title": "Predice",
+  "landing.step2Desc": "Ingresa tus marcadores, equipos clasificados y premios antes de la fecha límite.",
+  "landing.step3Title": "Compite",
+  "landing.step3Desc": "Sigue la tabla de posiciones en vivo y compite con tus amigos durante el Mundial.",
+
+  // Social section
+  "landing.socialTitle": "Compite con amigos",
+  "landing.socialDesc": "¡Solo se puede ganar una polla mundialista cada 4 años!",
+  "landing.socialFeature1": "Tabla en tiempo real",
+  "landing.socialFeature1Desc": "Las posiciones se actualizan en vivo con cada partido.",
+  "landing.socialFeature2": "Cara a cara",
+  "landing.socialFeature2Desc": "Compara predicciones lado a lado con cualquier participante.",
+  "landing.socialFeature3": "Estadísticas en vivo",
+  "landing.socialFeature3Desc": "Campeón más elegido, marcadores consenso y favoritos por grupo.",
+  "landing.socialFeature4": "Predicciones reveladas",
+  "landing.socialFeature4Desc": "Las predicciones de todos se hacen visibles el 11 de junio. ¡No hay donde esconderse!",
+
+  // Avatar section
+  "landing.avatarTitle": "Elige tu avatar",
+  "landing.avatarDesc": "Mascotas mundialistas y leyendas del fútbol — ¿cuál te representa?",
+
+  // Final CTA
+  "landing.ctaTitle": "¿Listo para jugar?",
+  "landing.ctaDesc": "Las predicciones cierran el 4 de junio. ¡No te quedes por fuera!",
   "landing.scoringSystem": "Reglas",
   "landing.scoringCategory1": "Partidos",
   "landing.scoringCategory1Desc": "Predice el marcador de los 48 partidos de fase de grupos. Mientras más preciso, más puntos.",
@@ -274,13 +308,21 @@ const es = {
   "rules.faq2Q": "¿Qué pasa si no pago antes del inicio del torneo?",
   "rules.faq2A": "Puedes ingresar tus predicciones sin haber pagado, pero no participarás oficialmente en la polla ni serás elegible para premios hasta que tu pago sea verificado.",
   "rules.faq3Q": "¿Cómo se desempatan posiciones iguales?",
-  "rules.faq3A": "En caso de empate en puntos totales, se prioriza: 1) más marcadores exactos, 2) más resultados con diferencia correcta, 3) acierto del campeón. Si persiste el empate, se divide el premio.",
+  "rules.faq3A": "En caso de empate en puntos totales, se prioriza: 1) haber acertado el campeón del Mundial, 2) haber acertado el subcampeón, 3) haber acertado el tercer lugar. Si persiste el empate, las posiciones empatadas comparten el/los premio(s) equitativamente.",
   "rules.faq4Q": "¿Solo se predicen partidos de fase de grupos?",
   "rules.faq4A": "Sí, las predicciones de marcador son solo para los 48 partidos de la fase de grupos. Para las fases eliminatorias, predices qué equipos clasifican a cada ronda.",
   "rules.faq5Q": "¿Cuándo puedo ver las predicciones de los demás?",
   "rules.faq5A": "Las predicciones de todos los participantes se hacen visibles a partir del 11 de junio de 2026, cuando comienza el Mundial. Antes de esa fecha, solo puedes ver las tuyas.",
   "rules.faq6Q": "¿Qué pasa con los partidos que van a penales?",
   "rules.faq6A": "Para la fase de grupos, solo aplica el resultado en los 90 minutos. Para las predicciones de equipos clasificados, lo que importa es que el equipo avance, independientemente de cómo.",
+
+  // Tiebreaker
+  "rules.tiebreaker": "Desempate",
+  "rules.tiebreakerDesc": "En caso de empate en puntos totales, se resuelve así:",
+  "rules.tb1": "Haber acertado el campeón del Mundial",
+  "rules.tb2": "Haber acertado el subcampeón",
+  "rules.tb3": "Haber acertado el tercer lugar",
+  "rules.tbShared": "Si persiste el empate, las posiciones empatadas comparten el/los premio(s) equitativamente.",
 
   // Lone Wolf
   "rules.loneWolf": "Bonus Lobo Solitario",

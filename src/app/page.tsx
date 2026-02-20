@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Trophy, Users, Target, Star, DollarSign, Globe } from "lucide-react";
+import { Trophy, Target, Star, DollarSign, Globe, Swords, BarChart3, Eye, ArrowRight, ShieldCheck, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
-import { TOURNAMENT_START, ENTRY_FEE_COP, FIXED_PRIZES } from "@/lib/constants";
+import { TOURNAMENT_START } from "@/lib/constants";
 import { useTranslation } from "@/i18n";
 
 function CountdownTimer() {
@@ -49,40 +49,82 @@ function CountdownTimer() {
 }
 
 function PrizePoolDisplay() {
-  const { t, formatCurrency } = useTranslation();
+  const { t } = useTranslation();
 
   return (
-    <div className="bg-wc-card border border-gold-500/30 rounded-2xl p-8 card-glow">
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <DollarSign className="w-6 h-6 text-gold-400" />
-        <h2 className="text-2xl font-bold text-white">{t("landing.prizePool")}</h2>
+    <div className="bg-wc-card border border-gold-500/30 rounded-2xl p-8 md:p-10 card-glow">
+      <div className="flex items-center justify-center gap-2 mb-5">
+        <DollarSign className="w-7 h-7 text-gold-400" />
+        <h2 className="text-2xl md:text-3xl font-bold text-white">{t("landing.prizePool")}</h2>
       </div>
-      <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="grid grid-cols-3 gap-6 text-center">
         <div>
-          <p className="text-yellow-400 font-bold text-lg">
-            {formatCurrency(FIXED_PRIZES.firstPlace)}
+          <p className="text-yellow-400 font-bold text-xl md:text-2xl">
+            {t("landing.1stPrize")}
           </p>
-          <p className="text-gray-500 text-xs">{t("landing.1stPlace")}</p>
+          <p className="text-gray-500 text-sm">{t("landing.1stPlace")}</p>
         </div>
         <div>
-          <p className="text-gray-300 font-bold text-lg">
-            {formatCurrency(FIXED_PRIZES.secondPlace)}
+          <p className="text-gray-300 font-bold text-xl md:text-2xl">
+            {t("landing.2ndPrize")}
           </p>
-          <p className="text-gray-500 text-xs">{t("landing.2ndPlace")}</p>
+          <p className="text-gray-500 text-sm">{t("landing.2ndPlace")}</p>
         </div>
         <div>
-          <p className="text-gray-300 font-bold text-lg">
-            {formatCurrency(FIXED_PRIZES.thirdPlace)}
+          <p className="text-gray-300 font-bold text-xl md:text-2xl">
+            {t("landing.3rdPrize")}
           </p>
-          <p className="text-gray-500 text-xs">{t("landing.3rdPlace")}</p>
+          <p className="text-gray-500 text-sm">{t("landing.3rdPlace")}</p>
         </div>
       </div>
+      <p className="text-gray-500 text-sm text-center mt-5">{t("landing.entryFee")}</p>
     </div>
   );
 }
 
 export default function LandingPage() {
-  const { t, formatCurrency, locale, setLocale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
+
+  const features = [
+    {
+      icon: Target,
+      title: t("landing.feature1Title"),
+      desc: t("landing.feature1Desc"),
+    },
+    {
+      icon: ShieldCheck,
+      title: t("landing.feature2Title"),
+      desc: t("landing.feature2Desc"),
+    },
+    {
+      icon: Mail,
+      title: t("landing.feature3Title"),
+      desc: t("landing.feature3Desc"),
+    },
+  ];
+
+  const socialFeatures = [
+    {
+      icon: BarChart3,
+      title: t("landing.socialFeature1"),
+      desc: t("landing.socialFeature1Desc"),
+    },
+    {
+      icon: Swords,
+      title: t("landing.socialFeature2"),
+      desc: t("landing.socialFeature2Desc"),
+    },
+    {
+      icon: Star,
+      title: t("landing.socialFeature3"),
+      desc: t("landing.socialFeature3Desc"),
+    },
+    {
+      icon: Eye,
+      title: t("landing.socialFeature4"),
+      desc: t("landing.socialFeature4Desc"),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-wc-darker">
@@ -100,7 +142,7 @@ export default function LandingPage() {
       {/* Hero */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gold-500/5 via-transparent to-transparent" />
-        <div className="max-w-4xl mx-auto px-4 pt-20 pb-16 text-center relative">
+        <div className="max-w-4xl mx-auto px-4 pt-20 pb-12 text-center relative">
           <img
             src="/wc-logo-blue-and-green.jpeg"
             alt="FIFA World Cup 2026"
@@ -136,32 +178,16 @@ export default function LandingPage() {
           </div>
 
           {/* Prize Pool */}
-          <div className="max-w-md mx-auto">
+          <div className="max-w-xl mx-auto">
             <PrizePoolDisplay />
           </div>
         </div>
       </div>
 
       {/* Features */}
-      <div className="max-w-5xl mx-auto px-4 py-16">
+      <div className="max-w-5xl mx-auto px-4 py-10">
         <div className="grid md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: Target,
-              title: t("landing.feature1Title"),
-              desc: t("landing.feature1Desc"),
-            },
-            {
-              icon: Users,
-              title: t("landing.feature2Title"),
-              desc: t("landing.feature2Desc"),
-            },
-            {
-              icon: Trophy,
-              title: t("landing.feature3Title"),
-              desc: t("landing.feature3Desc", { entryFee: formatCurrency(ENTRY_FEE_COP) }),
-            },
-          ].map((feature) => {
+          {features.map((feature) => {
             const Icon = feature.icon;
             return (
               <div
@@ -179,8 +205,37 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Compete with friends */}
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <h2 className="text-2xl font-bold text-white text-center mb-2">
+          {t("landing.socialTitle")}
+        </h2>
+        <p className="text-gray-400 text-center mb-8 text-sm">
+          {t("landing.socialDesc")}
+        </p>
+        <div className="grid sm:grid-cols-2 gap-4">
+          {socialFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <div
+                key={feature.title}
+                className="bg-wc-card border border-wc-border rounded-xl p-5 flex gap-4 items-start"
+              >
+                <div className="w-10 h-10 rounded-lg bg-gold-500/10 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-5 h-5 text-gold-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white mb-1">{feature.title}</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">{feature.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Scoring preview */}
-      <div className="max-w-3xl mx-auto px-4 pb-16">
+      <div className="max-w-3xl mx-auto px-4 py-10">
         <div className="bg-wc-card border border-wc-border rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             {t("landing.scoringSystem")}
@@ -219,6 +274,23 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Final CTA */}
+      <div className="max-w-2xl mx-auto px-4 py-10 text-center">
+        <h2 className="text-3xl font-bold text-white mb-3">
+          {t("landing.ctaTitle")}
+        </h2>
+        <p className="text-gray-400 mb-8">
+          {t("landing.ctaDesc")}
+        </p>
+        <Link
+          href="/registro"
+          className="inline-flex items-center gap-2 bg-gold-500 hover:bg-gold-600 text-black font-bold px-8 py-3 rounded-xl text-lg transition-colors"
+        >
+          {t("landing.register")}
+          <ArrowRight className="w-5 h-5" />
+        </Link>
       </div>
 
       <footer className="border-t border-wc-border py-8 text-center">

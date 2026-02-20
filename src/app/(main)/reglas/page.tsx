@@ -7,6 +7,7 @@ import {
   Star,
   Calendar,
   DollarSign,
+  Scale,
   HelpCircle,
   ChevronDown,
   ChevronUp,
@@ -210,6 +211,25 @@ export default function ReglasPage() {
         <p className="text-xs text-gray-600 mt-2">
           {t('rules.remaining')}
         </p>
+      </div>
+
+      <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-4">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+          <Scale className="w-5 h-5 text-gold-400" />
+          {t('rules.tiebreaker')}
+        </h3>
+        <p className="text-sm text-gray-400">{t('rules.tiebreakerDesc')}</p>
+        <div className="space-y-2">
+          {[t('rules.tb1'), t('rules.tb2'), t('rules.tb3')].map((label, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 bg-wc-darker rounded-lg border border-wc-border">
+              <span className="w-6 h-6 flex items-center justify-center rounded-full bg-gold-400/10 text-gold-400 text-xs font-bold shrink-0">
+                {i + 1}
+              </span>
+              <span className="text-sm text-gray-300">{label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-600">{t('rules.tbShared')}</p>
       </div>
 
       <div className="bg-wc-card border border-wc-border rounded-xl p-6">

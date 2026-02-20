@@ -28,12 +28,45 @@ const en: Record<TranslationKey, string> = {
   "landing.1stPlace": "1st Place",
   "landing.2ndPlace": "2nd Place",
   "landing.3rdPlace": "3rd Place",
+  "landing.entryFee": "Entry fee: $80 USD",
+  "landing.1stPrize": "$5,000 USD",
+  "landing.2ndPrize": "$1,500 USD",
+  "landing.3rdPrize": "$80 USD",
   "landing.feature1Title": "Predict",
   "landing.feature1Desc": "Enter your predictions for all 48 group stage matches, advancing teams, and individual awards.",
-  "landing.feature2Title": "Compete",
-  "landing.feature2Desc": "Compare your predictions with friends. Real-time leaderboard during the World Cup.",
-  "landing.feature3Title": "Win",
-  "landing.feature3Desc": "The best predictor wins $20 million COP. Second place $5 million. Third place gets their {entryFee} entry fee back.",
+  "landing.feature2Title": "Among friends",
+  "landing.feature2Desc": "A competition among friends with full transparency. Clear rules, fixed prizes, and an organizer who's not keeping the money :)",
+  "landing.feature3Title": "Summary by email",
+  "landing.feature3Desc": "Once you complete 100% of your predictions, you'll receive a full summary by email with all your picks.",
+
+  // How it works
+  "landing.howItWorks": "How it works",
+  "landing.step1Title": "Sign up",
+  "landing.step1Desc": "Create your account and choose an avatar from World Cup mascots and football legends.",
+  "landing.step2Title": "Predict",
+  "landing.step2Desc": "Enter your scores, advancing teams, and awards before the deadline.",
+  "landing.step3Title": "Compete",
+  "landing.step3Desc": "Follow the live leaderboard and compete with friends during the World Cup.",
+
+  // Social section
+  "landing.socialTitle": "Compete with friends",
+  "landing.socialDesc": "It's not just a pool — it's a social experience.",
+  "landing.socialFeature1": "Real-time leaderboard",
+  "landing.socialFeature1Desc": "Rankings update live with every match.",
+  "landing.socialFeature2": "Head-to-head",
+  "landing.socialFeature2Desc": "Compare predictions side by side with any participant.",
+  "landing.socialFeature3": "Live stats",
+  "landing.socialFeature3Desc": "Most picked champion, consensus scores, and group favorites.",
+  "landing.socialFeature4": "Predictions revealed",
+  "landing.socialFeature4Desc": "Everyone's predictions become visible on June 11. No hiding!",
+
+  // Avatar section
+  "landing.avatarTitle": "Choose your avatar",
+  "landing.avatarDesc": "World Cup mascots and football legends — which one represents you?",
+
+  // Final CTA
+  "landing.ctaTitle": "Ready to play?",
+  "landing.ctaDesc": "Predictions close on June 4. Don't miss out!",
   "landing.scoringSystem": "Rules",
   "landing.scoringCategory1": "Matches",
   "landing.scoringCategory1Desc": "Predict the score of all 48 group stage matches. The more precise, the more points.",
@@ -276,13 +309,21 @@ const en: Record<TranslationKey, string> = {
   "rules.faq2Q": "What happens if I don't pay before the tournament starts?",
   "rules.faq2A": "You can enter your predictions without having paid, but you won't officially participate in the pool or be eligible for prizes until your payment is verified.",
   "rules.faq3Q": "How are tiebreakers handled?",
-  "rules.faq3A": "In case of a tie in total points, priority goes to: 1) more exact scores, 2) more results with correct difference, 3) correctly predicting the champion. If the tie persists, the prize is split.",
+  "rules.faq3A": "In case of a tie in total points, priority goes to: 1) correctly predicting the World Cup champion, 2) correctly predicting the runner-up, 3) correctly predicting the third place. If the tie persists, the tied positions share the prize(s) equally.",
   "rules.faq4Q": "Are only group stage matches predicted?",
   "rules.faq4A": "Yes, score predictions are only for the 48 group stage matches. For the knockout stages, you predict which teams advance to each round.",
   "rules.faq5Q": "When can I see other people's predictions?",
   "rules.faq5A": "All participants' predictions become visible starting June 11, 2026, when the World Cup begins. Before that date, you can only see your own.",
   "rules.faq6Q": "What happens with matches that go to penalties?",
   "rules.faq6A": "For the group stage, only the 90-minute result applies. For advancing team predictions, what matters is that the team advances, regardless of how.",
+
+  // Tiebreaker
+  "rules.tiebreaker": "Tiebreaker",
+  "rules.tiebreakerDesc": "In case of a tie in total points, it is resolved as follows:",
+  "rules.tb1": "Correctly predicted the World Cup champion",
+  "rules.tb2": "Correctly predicted the runner-up",
+  "rules.tb3": "Correctly predicted the third place",
+  "rules.tbShared": "If the tie persists, the tied positions share the prize(s) equally.",
 
   // Lone Wolf
   "rules.loneWolf": "Lone Wolf Bonus",

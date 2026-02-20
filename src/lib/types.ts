@@ -127,6 +127,9 @@ export interface LeaderboardEntry {
   advancing_points: number;
   award_points: number;
   rank: number;
+  tb_champion: boolean;
+  tb_runner_up: boolean;
+  tb_third_place: boolean;
   updated_at: string;
   // Joined
   profile?: Profile;
