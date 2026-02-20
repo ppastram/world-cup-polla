@@ -6,7 +6,7 @@ import { useTranslation } from '@/i18n';
 import type { TranslationKey } from '@/i18n';
 
 interface AwardsFormProps {
-  predictions: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>;
+  predictions: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null; is_lone_wolf?: boolean }>;
   onChange: (awardType: string, value: { player_name?: string; total_goals_guess?: number }) => void;
   disabled?: boolean;
 }
@@ -72,12 +72,13 @@ export default function AwardsForm({
         const hasBeenScored = prediction.points_earned != null;
         const earnedPoints = prediction.points_earned ?? 0;
         const isCorrect = hasBeenScored && earnedPoints > 0;
+        const isLoneWolf = prediction.is_lone_wolf;
 
         return (
           <div
             key={award.key}
             className={`bg-wc-card border rounded-lg p-4 transition-colors ${
-              isFilled ? 'border-gold-500/40' : 'border-wc-border'
+              isLoneWolf ? 'border-purple-500/40 bg-purple-500/5' : isFilled ? 'border-gold-500/40' : 'border-wc-border'
             }`}
           >
             <div className="flex items-start gap-3">
@@ -125,12 +126,13 @@ export default function AwardsForm({
 
                 {hasBeenScored && (
                   <div className={`flex items-center gap-2 mt-2 text-sm font-medium ${
-                    isCorrect ? 'text-emerald-400' : 'text-red-400'
+                    isLoneWolf ? 'text-purple-400' : isCorrect ? 'text-emerald-400' : 'text-red-400'
                   }`}>
                     {isCorrect ? (
                       <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span>+{earnedPoints} pts</span>
+                        {isLoneWolf ? <span>🐺</span> : <CheckCircle2 className="w-4 h-4" />}
+                        <span>+{isLoneWolf ? earnedPoints * 2 : earnedPoints} pts</span>
+                        {isLoneWolf && <span className="text-xs opacity-75">Lone Wolf x2</span>}
                       </>
                     ) : (
                       <>

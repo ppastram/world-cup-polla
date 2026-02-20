@@ -36,10 +36,11 @@ export default function PrediccionesPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   // Predictions state
-  const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number; pointsEarned?: number | null }>>({});
+  const [matchPredictions, setMatchPredictions] = useState<Record<string, { home: number; away: number; pointsEarned?: number | null; isLoneWolf?: boolean }>>({});
   const [advancingPredictions, setAdvancingPredictions] = useState<Record<string, string[]>>({});
   const [advancingPoints, setAdvancingPoints] = useState<Record<string, Record<string, number | null>>>({});
-  const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }>>({});
+  const [advancingLoneWolves, setAdvancingLoneWolves] = useState<Record<string, Record<string, boolean>>>({});
+  const [awardPredictions, setAwardPredictions] = useState<Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null; is_lone_wolf?: boolean }>>({});
 
   const isPastDeadline = new Date() > PREDICTION_DEADLINE;
   const totalSteps = 5;
@@ -82,9 +83,9 @@ export default function PrediccionesPage() {
       if (matchesData) setMatches(matchesData);
 
       if (matchPreds) {
-        const map: Record<string, { home: number; away: number; pointsEarned?: number | null }> = {};
+        const map: Record<string, { home: number; away: number; pointsEarned?: number | null; isLoneWolf?: boolean }> = {};
         for (const p of matchPreds) {
-          map[p.match_id] = { home: p.home_score, away: p.away_score, pointsEarned: p.points_earned };
+          map[p.match_id] = { home: p.home_score, away: p.away_score, pointsEarned: p.points_earned, isLoneWolf: p.is_lone_wolf };
         }
         setMatchPredictions(map);
       }
@@ -92,6 +93,7 @@ export default function PrediccionesPage() {
       if (advancingPreds) {
         const map: Record<string, string[]> = {};
         const pointsMap: Record<string, Record<string, number | null>> = {};
+        const lwMap: Record<string, Record<string, boolean>> = {};
         for (const p of advancingPreds) {
           if (!map[p.round]) map[p.round] = [];
           map[p.round].push(p.team_id);
@@ -100,18 +102,24 @@ export default function PrediccionesPage() {
             if (!pointsMap[p.round]) pointsMap[p.round] = {};
             pointsMap[p.round][p.team_id] = p.points_earned;
           }
+          if (p.is_lone_wolf) {
+            if (!lwMap[p.round]) lwMap[p.round] = {};
+            lwMap[p.round][p.team_id] = true;
+          }
         }
         setAdvancingPredictions(map);
         setAdvancingPoints(pointsMap);
+        setAdvancingLoneWolves(lwMap);
       }
 
       if (awardPreds) {
-        const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null }> = {};
+        const map: Record<string, { player_name?: string; total_goals_guess?: number; points_earned?: number | null; is_lone_wolf?: boolean }> = {};
         for (const p of awardPreds) {
           map[p.award_type] = {
             player_name: p.player_name || undefined,
             total_goals_guess: p.total_goals_guess ?? undefined,
             points_earned: p.points_earned ?? null,
+            is_lone_wolf: p.is_lone_wolf,
           };
         }
         setAwardPredictions(map);
@@ -394,6 +402,7 @@ export default function PrediccionesPage() {
             disabled={isPastDeadline}
             autoRound32={autoRound32}
             pointsMap={advancingPoints}
+            loneWolfMap={advancingLoneWolves}
           />
         )}
 

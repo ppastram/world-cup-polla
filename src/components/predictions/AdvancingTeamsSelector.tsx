@@ -13,6 +13,8 @@ interface AdvancingTeamsSelectorProps {
   autoRound32?: string[];
   /** points_earned per round per team_id (null = not yet scored) */
   pointsMap?: Record<string, Record<string, number | null>>;
+  /** lone wolf flags per round per team_id */
+  loneWolfMap?: Record<string, Record<string, boolean>>;
 }
 
 function getPointsBadgeClass(points: number): string {
@@ -37,6 +39,7 @@ export default function AdvancingTeamsSelector({
   disabled = false,
   autoRound32,
   pointsMap = {},
+  loneWolfMap = {},
 }: AdvancingTeamsSelectorProps) {
   const { t } = useTranslation();
   const [expandedRound, setExpandedRound] = useState<string>(autoRound32 ? 'round_32' : 'round_32');
@@ -138,8 +141,12 @@ export default function AdvancingTeamsSelector({
         const isComplete = selected.length === round.count;
 
         const roundPoints = pointsMap[round.key] || {};
+        const roundLoneWolves = loneWolfMap[round.key] || {};
         const hasAnyScored = Object.values(roundPoints).some((p) => p !== null);
-        const roundTotalPoints = Object.values(roundPoints).reduce((sum: number, p) => sum + (p || 0), 0);
+        const roundTotalPoints = Object.entries(roundPoints).reduce((sum: number, [teamId, p]) => {
+          const pts = p || 0;
+          return sum + (roundLoneWolves[teamId] ? pts * 2 : pts);
+        }, 0);
 
         const hasPrevSelection = round.key === 'round_32'
           || (round.key === 'third_place' ? (predictions['final'] || []).length > 0
@@ -209,11 +216,14 @@ export default function AdvancingTeamsSelector({
                       {available.map((team) => {
                         const teamPoints = roundPoints[team.id];
                         const isScored = teamPoints !== null && teamPoints !== undefined;
+                        const isLW = roundLoneWolves[team.id];
                         return (
                           <div
                             key={team.id}
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg border relative ${
-                              isScored && teamPoints > 0
+                              isLW
+                                ? 'bg-purple-500/10 border-purple-500/40 text-purple-300'
+                                : isScored && teamPoints > 0
                                 ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
                                 : isScored
                                 ? 'bg-red-500/10 border-red-500/40 text-red-300'
@@ -221,8 +231,11 @@ export default function AdvancingTeamsSelector({
                             }`}
                           >
                             {isScored && (
-                              <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${getPointsBadgeClass(teamPoints)}`}>
-                                +{teamPoints}
+                              <span className={`absolute -top-2 -right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                isLW ? 'bg-purple-500/20 text-purple-400' : getPointsBadgeClass(teamPoints)
+                              }`}>
+                                {isLW && <span>🐺</span>}
+                                +{isLW ? teamPoints * 2 : teamPoints}
                               </span>
                             )}
                             <img
@@ -257,6 +270,7 @@ export default function AdvancingTeamsSelector({
                             const isFull = selected.length >= round.count && !isSelected;
                             const teamPoints = roundPoints[team.id];
                             const isScored = isSelected && teamPoints !== null && teamPoints !== undefined;
+                            const isLW = roundLoneWolves[team.id];
 
                             return (
                               <button
@@ -265,7 +279,9 @@ export default function AdvancingTeamsSelector({
                                 onClick={() => toggleTeam(round.key, team.id, round.count)}
                                 disabled={disabled || (isFull && !isSelected)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-left transition-all relative ${
-                                  isScored && teamPoints > 0
+                                  isScored && isLW
+                                    ? 'bg-purple-500/20 border-purple-500/60 text-purple-300'
+                                    : isScored && teamPoints > 0
                                     ? 'bg-emerald-500/20 border-emerald-500/60 text-emerald-300'
                                     : isScored
                                     ? 'bg-red-500/20 border-red-500/40 text-red-300'
@@ -277,8 +293,11 @@ export default function AdvancingTeamsSelector({
                                 }`}
                               >
                                 {isScored && (
-                                  <span className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${getPointsBadgeClass(teamPoints)}`}>
-                                    +{teamPoints}
+                                  <span className={`absolute -top-2 -right-2 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    isLW ? 'bg-purple-500/20 text-purple-400' : getPointsBadgeClass(teamPoints)
+                                  }`}>
+                                    {isLW && <span>🐺</span>}
+                                    +{isLW ? teamPoints * 2 : teamPoints}
                                   </span>
                                 )}
                                 <img

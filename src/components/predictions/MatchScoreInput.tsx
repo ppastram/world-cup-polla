@@ -10,6 +10,7 @@ interface MatchScoreInputProps {
   onChange: (home: number, away: number) => void;
   disabled?: boolean;
   pointsEarned?: number | null;
+  isLoneWolf?: boolean;
   actualHome?: number | null;
   actualAway?: number | null;
 }
@@ -70,6 +71,7 @@ export default function MatchScoreInput({
   onChange,
   disabled = false,
   pointsEarned,
+  isLoneWolf,
   actualHome,
   actualAway,
 }: MatchScoreInputProps) {
@@ -79,7 +81,7 @@ export default function MatchScoreInput({
   const isFinished = actualHome !== null && actualHome !== undefined && actualAway !== null && actualAway !== undefined;
   const isDisabled = disabled || isFinished;
 
-  const resultBorder = isFinished ? getResultBorderClass(pointsEarned) : '';
+  const resultBorder = isFinished ? (isLoneWolf ? 'border-purple-500/60' : getResultBorderClass(pointsEarned)) : '';
 
   function handleChange(side: 'home' | 'away', delta: number) {
     if (isDisabled) return;
@@ -96,8 +98,11 @@ export default function MatchScoreInput({
     >
       {/* Points badge */}
       {isFinished && pointsEarned !== null && pointsEarned !== undefined && (
-        <div className={`absolute -top-2 -right-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${getPointsBadgeClass(pointsEarned)}`}>
-          +{pointsEarned}
+        <div className={`absolute -top-2 -right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+          isLoneWolf ? 'bg-purple-500/20 text-purple-400' : getPointsBadgeClass(pointsEarned)
+        }`}>
+          {isLoneWolf && <span>🐺</span>}
+          +{isLoneWolf ? pointsEarned * 2 : pointsEarned}
         </div>
       )}
 
