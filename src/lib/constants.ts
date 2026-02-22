@@ -61,6 +61,70 @@ export const FIXED_PRIZES = {
 
 export const NEQUI_NUMBER = process.env.NEXT_PUBLIC_NEQUI_NUMBER || "";
 
+// ---------------------------------------------------------------------------
+// FIFA 2026 Bracket mapping
+// ---------------------------------------------------------------------------
+
+/**
+ * Maps each knockout match number to where its winner advances.
+ * Based on the official FIFA World Cup 2026 fixture schedule.
+ */
+export const ADVANCE_MAP: Record<number, { nextMatch: number; slot: 'home' | 'away' }> = {
+  // R32 → R16
+  74: { nextMatch: 89, slot: 'home' },
+  77: { nextMatch: 89, slot: 'away' },
+  73: { nextMatch: 90, slot: 'home' },
+  75: { nextMatch: 90, slot: 'away' },
+  76: { nextMatch: 91, slot: 'home' },
+  78: { nextMatch: 91, slot: 'away' },
+  79: { nextMatch: 92, slot: 'home' },
+  80: { nextMatch: 92, slot: 'away' },
+  83: { nextMatch: 93, slot: 'home' },
+  84: { nextMatch: 93, slot: 'away' },
+  81: { nextMatch: 94, slot: 'home' },
+  82: { nextMatch: 94, slot: 'away' },
+  86: { nextMatch: 95, slot: 'home' },
+  88: { nextMatch: 95, slot: 'away' },
+  85: { nextMatch: 96, slot: 'home' },
+  87: { nextMatch: 96, slot: 'away' },
+  // R16 → QF
+  89: { nextMatch: 97, slot: 'home' },
+  90: { nextMatch: 97, slot: 'away' },
+  93: { nextMatch: 98, slot: 'home' },
+  94: { nextMatch: 98, slot: 'away' },
+  91: { nextMatch: 99, slot: 'home' },
+  92: { nextMatch: 99, slot: 'away' },
+  95: { nextMatch: 100, slot: 'home' },
+  96: { nextMatch: 100, slot: 'away' },
+  // QF → SF
+  97: { nextMatch: 101, slot: 'home' },
+  98: { nextMatch: 101, slot: 'away' },
+  99: { nextMatch: 102, slot: 'home' },
+  100: { nextMatch: 102, slot: 'away' },
+  // SF → Final
+  101: { nextMatch: 104, slot: 'home' },
+  102: { nextMatch: 104, slot: 'away' },
+};
+
+/**
+ * Visual bracket display order — match numbers arranged so that
+ * vertically adjacent pairs correctly feed into the next round.
+ */
+export const BRACKET_DISPLAY_ORDER = {
+  left: {
+    r32: [74, 77, 73, 75, 83, 84, 81, 82],
+    r16: [89, 90, 93, 94],
+    qf: [97, 98],
+    sf: [101],
+  },
+  right: {
+    r32: [76, 78, 79, 80, 86, 88, 85, 87],
+    r16: [91, 92, 95, 96],
+    qf: [99, 100],
+    sf: [102],
+  },
+};
+
 /**
  * Calculate prize amounts based on number of paid participants.
  */

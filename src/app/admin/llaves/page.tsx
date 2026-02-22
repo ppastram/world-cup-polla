@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { GitBranch, Loader2, Save, X, Pencil, Plus, Minus, Search, Check, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import type { Team, MatchStage, AdvancingRound } from '@/lib/types';
+import { ADVANCE_MAP, BRACKET_DISPLAY_ORDER } from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -26,22 +27,6 @@ interface BracketMatch {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-
-const MATCH_BASE: Record<string, number> = {
-  round_32: 73,
-  round_16: 89,
-  quarter: 97,
-  semi: 101,
-  third_place: 103,
-  final: 104,
-};
-
-const NEXT_STAGE: Record<string, string> = {
-  round_32: 'round_16',
-  round_16: 'quarter',
-  quarter: 'semi',
-  semi: 'final',
-};
 
 const KNOCKOUT_ROUNDS: AdvancingRound[] = [
   'round_32',
@@ -80,15 +65,6 @@ function emptyMatch(stage: MatchStage, matchNumber: number): BracketMatch {
     away_team_id: null,
     penaltyWinnerId: null,
   };
-}
-
-function pad(matches: BracketMatch[], stage: MatchStage, n: number) {
-  const base = MATCH_BASE[stage] || 9000;
-  const out = [...matches];
-  while (out.length < n) {
-    out.push(emptyMatch(stage, base + out.length));
-  }
-  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -141,33 +117,30 @@ export default function AdminBracketPage() {
     setLoading(false);
   }
 
-  // helpers ----------------------------------------------------------------
+  // Build a lookup by match number for all knockout matches
+  const allByNumber = new Map<number, BracketMatch>();
+  for (const m of matches) allByNumber.set(m.matchNumber, m);
 
-  function byStage(stage: MatchStage) {
-    return matches
-      .filter((m) => m.stage === stage)
-      .sort((a, b) => a.matchNumber - b.matchNumber);
+  function orderedMatches(matchNumbers: number[], stage: MatchStage): BracketMatch[] {
+    return matchNumbers.map(
+      (n) => allByNumber.get(n) || emptyMatch(stage, n)
+    );
   }
 
-  // split each round into left / right halves
-  const r32 = pad(byStage('round_32'), 'round_32', 16);
-  const r16 = pad(byStage('round_16'), 'round_16', 8);
-  const qf = pad(byStage('quarter'), 'quarter', 4);
-  const sf = pad(byStage('semi'), 'semi', 2);
-  const fin = pad(byStage('final'), 'final', 1);
-  const tp = pad(byStage('third_place'), 'third_place', 1);
+  const fin = orderedMatches([104], 'final');
+  const tp = orderedMatches([103], 'third_place');
 
   const L = {
-    r32: r32.slice(0, 8),
-    r16: r16.slice(0, 4),
-    qf: qf.slice(0, 2),
-    sf: sf.slice(0, 1),
+    r32: orderedMatches(BRACKET_DISPLAY_ORDER.left.r32, 'round_32'),
+    r16: orderedMatches(BRACKET_DISPLAY_ORDER.left.r16, 'round_16'),
+    qf: orderedMatches(BRACKET_DISPLAY_ORDER.left.qf, 'quarter'),
+    sf: orderedMatches(BRACKET_DISPLAY_ORDER.left.sf, 'semi'),
   };
   const R = {
-    r32: r32.slice(8, 16),
-    r16: r16.slice(4, 8),
-    qf: qf.slice(2, 4),
-    sf: sf.slice(1, 2),
+    r32: orderedMatches(BRACKET_DISPLAY_ORDER.right.r32, 'round_32'),
+    r16: orderedMatches(BRACKET_DISPLAY_ORDER.right.r16, 'round_16'),
+    qf: orderedMatches(BRACKET_DISPLAY_ORDER.right.qf, 'quarter'),
+    sf: orderedMatches(BRACKET_DISPLAY_ORDER.right.sf, 'semi'),
   };
 
   // Save flow --------------------------------------------------------------
@@ -212,20 +185,15 @@ export default function AdminBracketPage() {
         return w === m.home_team_id ? m.away_team_id : m.home_team_id;
       };
 
-      // 2. Auto-advance winner to next bracket match slot
-      const nextStage = NEXT_STAGE[updated.stage];
-      if (nextStage && isFinished) {
-        const currentIndex = updated.matchNumber - MATCH_BASE[updated.stage];
-        const nextIndex = Math.floor(currentIndex / 2);
-        const isHome = currentIndex % 2 === 0;
-        const nextMatchNumber = MATCH_BASE[nextStage] + nextIndex;
-
+      // 2. Auto-advance winner to next bracket match slot (FIFA fixture map)
+      const advanceEntry = ADVANCE_MAP[updated.matchNumber];
+      if (advanceEntry && isFinished) {
         const winner = getMatchWinner(updated);
 
         if (winner) {
-          const nextMatch = matches.find((m) => m.matchNumber === nextMatchNumber);
+          const nextMatch = matches.find((m) => m.matchNumber === advanceEntry.nextMatch);
           if (nextMatch && nextMatch.id) {
-            const advanceData: Record<string, unknown> = isHome
+            const advanceData: Record<string, unknown> = advanceEntry.slot === 'home'
               ? { home_team_id: winner }
               : { away_team_id: winner };
 
@@ -244,8 +212,7 @@ export default function AdminBracketPage() {
         if (loserTeamId) {
           const thirdMatch = matches.find((m) => m.stage === 'third_place');
           if (thirdMatch && thirdMatch.id) {
-            const sfIndex = updated.matchNumber - MATCH_BASE.semi;
-            const tpData: Record<string, unknown> = sfIndex === 0
+            const tpData: Record<string, unknown> = updated.matchNumber === 101
               ? { home_team_id: loserTeamId }
               : { away_team_id: loserTeamId };
 
@@ -532,32 +499,37 @@ function AdminMatchSlot({
   const canClick = !!match.id;
 
   return (
-    <button
-      onClick={() => canClick && onMatchClick(match)}
-      disabled={!canClick}
-      className={`rounded-lg overflow-hidden border w-full text-left group transition-all ${
-        !canClick
-          ? 'border-dashed border-gray-700 bg-wc-darker/50 cursor-not-allowed'
-          : isEmpty
-          ? 'border-dashed border-gray-600 bg-wc-card hover:border-gold-500/50 cursor-pointer'
-          : highlight
-          ? 'border-gold-500/40 bg-wc-card hover:border-gold-500/60 cursor-pointer'
-          : finished
-          ? 'border-emerald-500/30 bg-wc-card hover:border-emerald-500/50 cursor-pointer'
-          : 'border-wc-border bg-wc-card hover:border-gold-500/40 cursor-pointer'
-      }`}
-    >
-      <div className="relative">
-        {canClick && (
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-            <Pencil className="w-3 h-3 text-gold-400" />
-          </div>
-        )}
-        <AdminTeamRow team={match.homeTeam} score={match.homeScore} isWinner={homeWin} />
-        <div className="border-t border-wc-border/50" />
-        <AdminTeamRow team={match.awayTeam} score={match.awayScore} isWinner={awayWin} />
+    <div className="w-full">
+      <div className="text-[9px] text-gray-500 text-center font-mono mb-0.5">
+        #{match.matchNumber}
       </div>
-    </button>
+      <button
+        onClick={() => canClick && onMatchClick(match)}
+        disabled={!canClick}
+        className={`rounded-lg overflow-hidden border w-full text-left group transition-all ${
+          !canClick
+            ? 'border-dashed border-gray-700 bg-wc-darker/50 cursor-not-allowed'
+            : isEmpty
+            ? 'border-dashed border-gray-600 bg-wc-card hover:border-gold-500/50 cursor-pointer'
+            : highlight
+            ? 'border-gold-500/40 bg-wc-card hover:border-gold-500/60 cursor-pointer'
+            : finished
+            ? 'border-emerald-500/30 bg-wc-card hover:border-emerald-500/50 cursor-pointer'
+            : 'border-wc-border bg-wc-card hover:border-gold-500/40 cursor-pointer'
+        }`}
+      >
+        <div className="relative">
+          {canClick && (
+            <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+              <Pencil className="w-3 h-3 text-gold-400" />
+            </div>
+          )}
+          <AdminTeamRow team={match.homeTeam} score={match.homeScore} isWinner={homeWin} />
+          <div className="border-t border-wc-border/50" />
+          <AdminTeamRow team={match.awayTeam} score={match.awayScore} isWinner={awayWin} />
+        </div>
+      </button>
+    </div>
   );
 }
 

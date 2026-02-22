@@ -5,6 +5,7 @@ import { GitBranch, Loader2, Trophy } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useTranslation } from '@/i18n';
 import type { Team, AdvancingRound, MatchStage } from '@/lib/types';
+import { BRACKET_DISPLAY_ORDER } from '@/lib/constants';
 import TeamPredictorsPopup from '@/components/bracket/TeamPredictorsPopup';
 
 // ---------------------------------------------------------------------------
@@ -42,12 +43,6 @@ function emptyMatch(stage: MatchStage, idx: number): BracketMatch {
     stage,
     matchNumber: 9000 + idx,
   };
-}
-
-function pad(matches: BracketMatch[], stage: MatchStage, n: number) {
-  const out = [...matches];
-  while (out.length < n) out.push(emptyMatch(stage, out.length));
-  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,14 +107,6 @@ export default function BracketPage() {
     load();
   }, []);
 
-  // helpers ----------------------------------------------------------------
-
-  function byStage(stage: MatchStage) {
-    return matches
-      .filter((m) => m.stage === stage)
-      .sort((a, b) => a.matchNumber - b.matchNumber);
-  }
-
   function roundLabel(stage: MatchStage) {
     const map: Record<string, string> = {
       round_32: t('bracket.round32'),
@@ -144,25 +131,30 @@ export default function BracketPage() {
     });
   }
 
-  // split each round into left / right halves
-  const r32 = pad(byStage('round_32'), 'round_32', 16);
-  const r16 = pad(byStage('round_16'), 'round_16', 8);
-  const qf = pad(byStage('quarter'), 'quarter', 4);
-  const sf = pad(byStage('semi'), 'semi', 2);
-  const fin = pad(byStage('final'), 'final', 1);
-  const tp = pad(byStage('third_place'), 'third_place', 1);
+  // Build a lookup by match number and order by FIFA fixture map
+  const allByNumber = new Map<number, BracketMatch>();
+  for (const m of matches) allByNumber.set(m.matchNumber, m);
+
+  function orderedMatches(matchNumbers: number[], stage: MatchStage): BracketMatch[] {
+    return matchNumbers.map(
+      (n) => allByNumber.get(n) || emptyMatch(stage, n)
+    );
+  }
+
+  const fin = orderedMatches([104], 'final');
+  const tp = orderedMatches([103], 'third_place');
 
   const L = {
-    r32: r32.slice(0, 8),
-    r16: r16.slice(0, 4),
-    qf: qf.slice(0, 2),
-    sf: sf.slice(0, 1),
+    r32: orderedMatches(BRACKET_DISPLAY_ORDER.left.r32, 'round_32'),
+    r16: orderedMatches(BRACKET_DISPLAY_ORDER.left.r16, 'round_16'),
+    qf: orderedMatches(BRACKET_DISPLAY_ORDER.left.qf, 'quarter'),
+    sf: orderedMatches(BRACKET_DISPLAY_ORDER.left.sf, 'semi'),
   };
   const R = {
-    r32: r32.slice(8, 16),
-    r16: r16.slice(4, 8),
-    qf: qf.slice(2, 4),
-    sf: sf.slice(1, 2),
+    r32: orderedMatches(BRACKET_DISPLAY_ORDER.right.r32, 'round_32'),
+    r16: orderedMatches(BRACKET_DISPLAY_ORDER.right.r16, 'round_16'),
+    qf: orderedMatches(BRACKET_DISPLAY_ORDER.right.qf, 'quarter'),
+    sf: orderedMatches(BRACKET_DISPLAY_ORDER.right.sf, 'semi'),
   };
 
   if (loading) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserCheck, Phone, Mail, Send, Newspaper, Loader2, Trash2 } from 'lucide-react';
+import { UserCheck, Phone, Mail, Send, Newspaper, Loader2, Trash2, CheckCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import { useTranslation } from '@/i18n';
@@ -35,6 +35,8 @@ export default function OrganizadorPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [sendEmail, setSendEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   useEffect(() => {
     fetchPosts();
@@ -71,8 +73,28 @@ export default function OrganizadorPage() {
       .single();
     if (!error && data) {
       setPosts([data, ...posts]);
+      const postTitle = title.trim();
+      const postContent = content.trim();
       setTitle('');
       setContent('');
+      setSendEmail(false);
+      setSubmitting(false);
+
+      if (sendEmail) {
+        setEmailStatus('sending');
+        try {
+          await fetch('/api/email/send-blog-post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: postTitle, content: postContent }),
+          });
+        } catch (err) {
+          console.error('Error sending blog post emails:', err);
+        }
+        setEmailStatus('sent');
+        setTimeout(() => setEmailStatus('idle'), 3000);
+      }
+      return;
     }
     setSubmitting(false);
   }
@@ -178,14 +200,38 @@ export default function OrganizadorPage() {
               className="w-full bg-wc-darker border border-wc-border rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-gold-500/50 text-sm resize-none"
               required
             />
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-gold-500 hover:bg-gold-600 text-black font-bold py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              {t('organizer.publish')}
-            </button>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={sendEmail}
+                onChange={(e) => setSendEmail(e.target.checked)}
+                className="w-4 h-4 rounded border-wc-border bg-wc-darker accent-gold-500"
+              />
+              <Mail className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-400">{t('organizer.sendEmailToAll')}</span>
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-gold-500 hover:bg-gold-600 text-black font-bold py-2 px-4 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                {t('organizer.publish')}
+              </button>
+              {emailStatus === 'sending' && (
+                <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  {t('organizer.sendingEmails')}
+                </span>
+              )}
+              {emailStatus === 'sent' && (
+                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {t('organizer.emailsSent')}
+                </span>
+              )}
+            </div>
           </form>
         )}
 

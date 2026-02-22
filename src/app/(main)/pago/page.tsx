@@ -19,9 +19,9 @@ import { useTranslation } from '@/i18n';
 
 export default function PagoPage() {
   const { user, profile, loading: userLoading } = useUser();
-  const { t, formatCurrency } = useTranslation();
+  const { t, formatCurrency, locale } = useTranslation();
   const [uploading, setUploading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [paymentStatus, setPaymentStatus] = useState<string>('pending');
   const [proofUrl, setProofUrl] = useState<string | null>(null);
@@ -34,10 +34,10 @@ export default function PagoPage() {
     }
   }, [profile]);
 
-  async function handleCopyNequi() {
-    await navigator.clipboard.writeText(NEQUI_NUMBER);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function handleCopy(text: string, key: string) {
+    await navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -153,29 +153,80 @@ export default function PagoPage() {
       <div className="bg-wc-card border border-wc-border rounded-xl p-6 space-y-5">
         <h2 className="text-lg font-bold text-white">{t('payment.info')}</h2>
 
-        <div>
-          <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
-            {t('payment.nequiNumber')}
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
-              <span className="text-lg font-mono font-bold text-blue-400 tracking-wider">
-                {NEQUI_NUMBER}
-              </span>
+        {locale === 'en' ? (
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
+                {t('payment.dolarAppLabel')}
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
+                  <span className="text-lg font-mono font-bold text-blue-400 tracking-wider">
+                    {t('payment.dolarAppAccount')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleCopy(t('payment.dolarAppAccount'), 'dolarapp')}
+                  className="shrink-0 bg-wc-darker border border-wc-border rounded-lg p-3 hover:bg-wc-border transition-colors"
+                  title={t('payment.copyNumber')}
+                >
+                  {copied === 'dolarapp' ? (
+                    <Check className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
             </div>
-            <button
-              onClick={handleCopyNequi}
-              className="shrink-0 bg-wc-darker border border-wc-border rounded-lg p-3 hover:bg-wc-border transition-colors"
-              title={t('payment.copyNumber')}
-            >
-              {copied ? (
-                <Check className="w-5 h-5 text-emerald-400" />
-              ) : (
-                <Copy className="w-5 h-5 text-gray-400" />
-              )}
-            </button>
+            <div>
+              <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
+                {t('payment.global66Label')}
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
+                  <span className="text-lg font-mono font-bold text-blue-400 tracking-wider">
+                    {t('payment.global66Account')}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleCopy(t('payment.global66Account'), 'global66')}
+                  className="shrink-0 bg-wc-darker border border-wc-border rounded-lg p-3 hover:bg-wc-border transition-colors"
+                  title={t('payment.copyNumber')}
+                >
+                  {copied === 'global66' ? (
+                    <Check className="w-5 h-5 text-emerald-400" />
+                  ) : (
+                    <Copy className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>
+            <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
+              {t('payment.nequiNumber')}
+            </label>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-wc-darker border border-wc-border rounded-lg px-4 py-3">
+                <span className="text-lg font-mono font-bold text-blue-400 tracking-wider">
+                  {NEQUI_NUMBER}
+                </span>
+              </div>
+              <button
+                onClick={() => handleCopy(NEQUI_NUMBER, 'nequi')}
+                className="shrink-0 bg-wc-darker border border-wc-border rounded-lg p-3 hover:bg-wc-border transition-colors"
+                title={t('payment.copyNumber')}
+              >
+                {copied === 'nequi' ? (
+                  <Check className="w-5 h-5 text-emerald-400" />
+                ) : (
+                  <Copy className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="text-xs text-gray-500 uppercase tracking-wider block mb-2">
@@ -192,10 +243,14 @@ export default function PagoPage() {
           <h3 className="text-sm font-semibold text-white">{t('payment.instructions')}</h3>
           <ol className="text-sm text-gray-400 space-y-1.5 list-decimal list-inside">
             <li>{t('payment.step1')}</li>
-            <li>{t('payment.step2', { nequi: NEQUI_NUMBER })}</li>
-            <li>{t('payment.step3', { amount: formatCurrency(ENTRY_FEE_COP) })}</li>
+            <li>{locale === 'en'
+              ? t('payment.step2', { amount: formatCurrency(ENTRY_FEE_COP) })
+              : t('payment.step2', { nequi: NEQUI_NUMBER })}</li>
+            <li>{locale === 'en'
+              ? t('payment.step3')
+              : t('payment.step3', { amount: formatCurrency(ENTRY_FEE_COP) })}</li>
             <li>{t('payment.step4')}</li>
-            <li>{t('payment.step5')}</li>
+            {locale !== 'en' && <li>{t('payment.step5')}</li>}
           </ol>
         </div>
       </div>

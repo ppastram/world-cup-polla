@@ -8,7 +8,7 @@ export type Locale = 'es' | 'en';
 
 const dictionaries: Record<Locale, Record<TranslationKey, string>> = { es, en };
 
-const COP_TO_USD = 3700;
+const COP_TO_USD = 3750;
 const STORAGE_KEY = 'ampolla-locale';
 
 interface LanguageContextValue {
